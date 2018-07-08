@@ -28,6 +28,3 @@ class AbstractXMGTestCase(unittest.TestCase):
         setup_logging(**dict(self.conf.LogConfig))
 
         PKG_LOGGER.debug("Completed setUp of class %s", self.__class__.__name__)
-
-    def test_core(self):
-        self.assertTrue(True)

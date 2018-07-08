@@ -91,3 +91,5 @@ class XeroContactTestCase(ContainTestCase):
         }
 
         contact = XeroContact(api_data)
+
+        self.assertEqual(contact.company_name, sanitized_data['Company Name'])
