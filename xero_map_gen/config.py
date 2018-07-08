@@ -10,7 +10,7 @@ from builtins import super
 from six import text_type
 from traitlets import Bool, Float, Integer, Type, Unicode, validate
 from traitlets.config.configurable import Configurable
-from traitlets.config.loader import Config, KVArgParseConfigLoader
+from traitlets.config.loader import Config, KVArgParseConfigLoader, PyFileConfigLoader, ConfigFileNotFound
 
 from . import DESCRIPTION, PKG_NAME
 from .helper import TraitValidation
@@ -238,24 +238,25 @@ def get_argparse_loader():
         description=DESCRIPTION,
     )
 
-def load_config():
+def load_config(argv=None, extra_config_files=None, config_path=None):
     argparse_loader = get_argparse_loader()
-    cli_config = argparse_loader.load_config()
+    cli_config = argparse_loader.load_config(argv)
 
-    # TODO: generate config file list from cli_config
+    # TODO: generate config file list and config_path from cli_config
+    extra_config_files = extra_config_files or []
 
     # TODO: load config files, mergine each one of them in turn
     config = Config()
-    # for cf in config_files:
-    #     loader = PyFileConfigLoader(cf, path=path)
-    #     try:
-    #         next_config = loader.load_config()
-    #     except ConfigFileNotFound:
-    #         pass
-    #     except:
-    #         raise
-    #     else:
-    #         config.merge(next_config)
+    for cf in extra_config_files:
+        loader = PyFileConfigLoader(cf, path=config_path)
+        try:
+            next_config = loader.load_config()
+        except ConfigFileNotFound:
+            pass
+        except:
+            raise
+        else:
+            config.merge(next_config)
 
     # merge cli_config
     config.merge(cli_config)
