@@ -69,6 +69,8 @@ class XeroApiWrapper(Xero):
                 api_contact_data = self.rate_limit_retry_get('contacts', contact_id)
             except Exception:
                 break
+            assert len(api_contact_data) == 1
+            api_contact_data = api_contact_data[0]
             api_contacts.append(api_contact_data)
             assert contact_data, "empty api response for contact id %s" % contact_id
             PKG_LOGGER.debug("api contact: %s", pprint.pformat(contact_data))
