@@ -7,12 +7,7 @@ from . import PKG_NAME
 ROOT_LOGGER = logging.getLogger()
 ROOT_LOGGER.setLevel(logging.DEBUG)
 PKG_LOGGER = logging.getLogger(PKG_NAME)
-PKG_STREAM_HANDLER = logging.StreamHandler()
-if os.name != 'nt':
-    PKG_STREAM_HANDLER.setFormatter(coloredlogs.ColoredFormatter())
-PKG_STREAM_HANDLER.addFilter(coloredlogs.HostNameFilter())
-PKG_STREAM_HANDLER.addFilter(coloredlogs.ProgramNameFilter())
-ROOT_LOGGER.addHandler(PKG_STREAM_HANDLER)
+PKG_STREAM_HANDLER = None
 PKG_FILE_HANDLER = None
 
 def setup_logging(stream_log_level=None, log_file=None, file_log_level=None):
@@ -26,10 +21,18 @@ def setup_logging(stream_log_level=None, log_file=None, file_log_level=None):
     if file_log_level:
         PKG_FILE_HANDLER.setLevel(file_log_level)
     if stream_log_level:
+        if not PKG_STREAM_HANDLER:
+            PKG_STREAM_HANDLER = logging.StreamHandler()
+            if os.name != 'nt':
+                PKG_STREAM_HANDLER.setFormatter(coloredlogs.ColoredFormatter())
+            PKG_STREAM_HANDLER.addFilter(coloredlogs.HostNameFilter())
+            PKG_STREAM_HANDLER.addFilter(coloredlogs.ProgramNameFilter())
+            ROOT_LOGGER.addHandler(PKG_STREAM_HANDLER)
         PKG_STREAM_HANDLER.setLevel(stream_log_level)
 
     # TODO: maybe process quiet differently so that it does not add a stream handler
-    logging.info("stream log level: %s", PKG_STREAM_HANDLER.level)
+    if PKG_STREAM_HANDLER:
+        logging.info("stream log level: %s", PKG_STREAM_HANDLER.level)
     if PKG_FILE_HANDLER:
         logging.info("file log level: %s", PKG_FILE_HANDLER.level)
 

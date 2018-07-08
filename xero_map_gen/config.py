@@ -164,8 +164,15 @@ class BaseConfig(Configurable):
             "%s.%s" % (self.__class__, 'map_contact_group')
         )
 
-    contact_limit = Integer(default_value=0, help="Limit the number of contacts downloaded from the API")
-    # contact_limit = Union([Integer(), Type(None)], default_value=None, help="Limit the number of contacts downloaded from the API")
+    contact_limit = Integer(
+        default_value=0,
+        help="Limit the number of contacts downloaded from the API"
+    )
+
+    config_file = Unicode(
+        default_value="",
+        help="Load extra config from file"
+    )
 
 def get_argparse_loader():
     # TODO: argparse loader args
@@ -229,6 +236,14 @@ def get_argparse_loader():
                     'default' : text_type(BaseConfig.contact_limit.default_value),
                     'metavar': 'LIMIT'
                 },
+            },
+            'config-file': {
+                'trait': 'BaseConfig.config_file',
+                'add_kwargs': {
+                    'help' : BaseConfig.config_file.help,
+                    'default' : text_type(BaseConfig.config_file.default_value),
+                    'metavar': 'FILE'
+                },
             }
         },
         flags={
@@ -251,15 +266,12 @@ def get_argparse_loader():
         description=DESCRIPTION,
     )
 
-def load_config(argv=None, extra_config_files=None, config_path=None):
+def load_cli_config(argv=None):
     argparse_loader = get_argparse_loader()
     cli_config = argparse_loader.load_config(argv)
-    PKG_LOGGER.info("cli config is %s", pprint.pformat(cli_config))
+    return cli_config
 
-    # TODO: generate config file list and config_path from cli_config
-    extra_config_files = extra_config_files or []
-
-    # TODO: load config files, mergine each one of them in turn
+def load_file_config(extra_config_files=None, config_path=None):
     config = Config()
     for cf in extra_config_files:
         loader = PyFileConfigLoader(cf, path=config_path)
@@ -271,7 +283,15 @@ def load_config(argv=None, extra_config_files=None, config_path=None):
             raise
         else:
             config.merge(next_config)
+    return config
 
+def load_config(argv=None, extra_config_files=None, config_path=None):
+    cli_config = load_cli_config(argv)
+    PKG_LOGGER.info("cli config is %s", pprint.pformat(cli_config))
+
+    # TODO: generate config file list and config_path from cli_config
+    extra_config_files = extra_config_files or []
+    config = load_file_config(extra_config_files, config_path)
     PKG_LOGGER.info("file config is %s", pprint.pformat(config))
 
     # merge cli_config
