@@ -4,6 +4,7 @@ Configuration.
 Classes for parsing configuration files and command line arguments.
 """
 
+import pprint
 from argparse import SUPPRESS
 from builtins import super
 
@@ -253,6 +254,7 @@ def get_argparse_loader():
 def load_config(argv=None, extra_config_files=None, config_path=None):
     argparse_loader = get_argparse_loader()
     cli_config = argparse_loader.load_config(argv)
+    PKG_LOGGER.info("cli config is %s", pprint.pformat(cli_config))
 
     # TODO: generate config file list and config_path from cli_config
     extra_config_files = extra_config_files or []
@@ -270,6 +272,9 @@ def load_config(argv=None, extra_config_files=None, config_path=None):
         else:
             config.merge(next_config)
 
+    PKG_LOGGER.info("file config is %s", pprint.pformat(config))
+
     # merge cli_config
     config.merge(cli_config)
+    PKG_LOGGER.info("final config is %s", pprint.pformat(config))
     return config
