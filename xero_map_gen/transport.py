@@ -45,6 +45,7 @@ class XeroApiWrapper(Xero):
         raise UserWarning("Reached maximum number attempts (%s) for GET %s" % (self.max_attempts, attribute))
 
     def get_contacts_in_group(self, name=None, contact_group_id=None, limit=None):
+        limit = limit or None
         assert any([name, contact_group_id]), "either name or contact_group_id must be specified"
         if contact_group_id is None:
             all_groups = self.contactgroups.all()

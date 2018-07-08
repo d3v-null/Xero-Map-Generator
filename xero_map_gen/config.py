@@ -8,12 +8,15 @@ from argparse import SUPPRESS
 from builtins import super
 
 from six import text_type
-from traitlets import Bool, Float, Integer, Type, Unicode, validate
+from traitlets import Any, Bool, Float, Integer, Type, Unicode, Union, validate
 from traitlets.config.configurable import Configurable
-from traitlets.config.loader import Config, KVArgParseConfigLoader, PyFileConfigLoader, ConfigFileNotFound
+from traitlets.config.loader import (Config, ConfigFileNotFound,
+                                     KVArgParseConfigLoader,
+                                     PyFileConfigLoader)
 
 from . import DESCRIPTION, PKG_NAME
 from .helper import TraitValidation
+from .log import PKG_LOGGER
 
 
 class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
@@ -160,7 +163,8 @@ class BaseConfig(Configurable):
             "%s.%s" % (self.__class__, 'map_contact_group')
         )
 
-
+    contact_limit = Integer(default_value=0, help="Limit the number of contacts downloaded from the API")
+    # contact_limit = Union([Integer(), Type(None)], default_value=None, help="Limit the number of contacts downloaded from the API")
 
 def get_argparse_loader():
     # TODO: argparse loader args
@@ -171,7 +175,7 @@ def get_argparse_loader():
                 'trait': 'LogConfig.stream_log_level',
                 'add_kwargs': {
                     'help': LogConfig.stream_log_level.help,
-                    'default': LogConfig.stream_log_level.default_value,
+                    'default': text_type(LogConfig.stream_log_level.default_value),
                     'metavar': 'LEVEL'
                 },
                 'section': 'logging',
@@ -180,7 +184,7 @@ def get_argparse_loader():
                 'trait': 'LogConfig.file_log_level',
                 'add_kwargs': {
                     'help': LogConfig.file_log_level.help,
-                    'default': LogConfig.file_log_level.default_value,
+                    'default': text_type(LogConfig.file_log_level.default_value),
                     'metavar': 'LEVEL'
                 },
                 'section': 'logging',
@@ -189,7 +193,7 @@ def get_argparse_loader():
                 'trait': 'LogConfig.log_file',
                 'add_kwargs': {
                     'help': LogConfig.log_file.help,
-                    'default': LogConfig.log_file.default_value,
+                    'default': text_type(LogConfig.log_file.default_value),
                     'metavar': 'PATH'
                 },
                 'section': 'logging',
@@ -215,6 +219,14 @@ def get_argparse_loader():
                 'add_kwargs': {
                     'help' : BaseConfig.map_contact_group.help,
                     'metavar': 'GROUP'
+                },
+            },
+            'contact-limit': {
+                'trait': 'BaseConfig.contact_limit',
+                'add_kwargs': {
+                    'help' : BaseConfig.contact_limit.help,
+                    'default' : text_type(BaseConfig.contact_limit.default_value),
+                    'metavar': 'LIMIT'
                 },
             }
         },
