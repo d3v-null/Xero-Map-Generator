@@ -99,52 +99,90 @@ class XeroContactTestCase(ContainTestCase):
         self.assertEqual(contact.main_address_postcode, sanitized_data['Postcode'])
         self.assertEqual(contact.main_address_state, sanitized_data['State'])
         self.assertEqual(contact.main_address_country, sanitized_data['Country'])
+        self.assertEqual(contact.main_phone, api_data['Phones'][1])
+        self.assertEqual(contact.phone, sanitized_data['Phone'])
 
     def test_contact_address_priority(self):
         """ Test that container chooses addresses in correct priority """
-        api_data = {
-            'Addresses': [
-                {
-                    'AddressLine1': '1 Mariners Cove Place',
-                    'AddressLine2': '',
-                    'AddressLine3': '',
-                    'AddressLine4': '',
-                    'AddressType': 'DELIVERY',
-                    'AttentionTo': 'John Smith',
-                    'City': 'Sydney',
-                    'Country': 'AU',
-                    'PostalCode': '1033',
-                    'Region': 'NSW'
-                },
-                {
-                    'AddressLine1': '2 Mariners Cove Place',
-                    'AddressLine2': '',
-                    'AddressLine3': '',
-                    'AddressLine4': '',
-                    'AddressType': 'STREET',
-                    'AttentionTo': 'John Smith',
-                    'City': 'Sydney',
-                    'Country': 'AU',
-                    'PostalCode': '1033',
-                    'Region': 'NSW'
-                },
-                {
-                    'AddressLine1': '3 Mariners Cove Place',
-                    'AddressLine2': '',
-                    'AddressLine3': '',
-                    'AddressLine4': '',
-                    'AddressType': 'POBOX',
-                    'AttentionTo': 'John Smith',
-                    'City': 'Sydney',
-                    'Country': 'AU',
-                    'PostalCode': '1033',
-                    'Region': 'NSW'
-                }
-            ],
-        }
+        addresses = [
+            {
+                'AddressLine1': '1 Mariners Cove Place',
+                'AddressLine2': '',
+                'AddressLine3': '',
+                'AddressLine4': '',
+                'AddressType': 'DELIVERY',
+                'AttentionTo': 'John Smith',
+                'City': 'Sydney',
+                'Country': 'AU',
+                'PostalCode': '1033',
+                'Region': 'NSW'
+            },
+            {
+                'AddressLine1': '2 Mariners Cove Place',
+                'AddressLine2': '',
+                'AddressLine3': '',
+                'AddressLine4': '',
+                'AddressType': 'STREET',
+                'AttentionTo': 'John Smith',
+                'City': 'Sydney',
+                'Country': 'AU',
+                'PostalCode': '1033',
+                'Region': 'NSW'
+            },
+            {
+                'AddressLine1': '3 Mariners Cove Place',
+                'AddressLine2': '',
+                'AddressLine3': '',
+                'AddressLine4': '',
+                'AddressType': 'POBOX',
+                'AttentionTo': 'John Smith',
+                'City': 'Sydney',
+                'Country': 'AU',
+                'PostalCode': '1033',
+                'Region': 'NSW'
+            }
+        ]
+        for i in range(len(addresses)):
+            api_data = {
+                'Addresses': addresses[-i:] + addresses[:-i],
+            }
+            contact = XeroContact(api_data)
+            self.assertEqual(contact.main_address, addresses[2])
 
-        contact = XeroContact(api_data)
-        self.assertEqual(contact.main_address, api_data['Addresses'][2])
+
 
     def test_contact_phone_priority(self):
         """ Test that container chooses addresses in correct priority """
+
+        phones = [
+            {
+                'PhoneAreaCode': '',
+                'PhoneCountryCode': '',
+                'PhoneNumber': '68891030',
+                'PhoneType': 'DDI'
+            },
+            {
+                'PhoneAreaCode': '02',
+                'PhoneCountryCode': '',
+                'PhoneNumber': '68891031',
+                'PhoneType': 'DEFAULT'
+            },
+            {
+                'PhoneAreaCode': '02',
+                'PhoneCountryCode': '',
+                'PhoneNumber': '68891032',
+                'PhoneType': 'FAX'
+            },
+            {
+                'PhoneAreaCode': '',
+                'PhoneCountryCode': '',
+                'PhoneNumber': '68891033',
+                'PhoneType': 'MOBILE'
+            }
+        ]
+        for i in range(len(phones)):
+            api_data = {
+                'Phones': phones[-i:] + phones[:-i],
+            }
+            contact = XeroContact(api_data)
+            self.assertEqual(contact.main_phone, phones[1])

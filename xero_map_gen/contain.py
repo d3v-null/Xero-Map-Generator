@@ -49,13 +49,13 @@ class XeroContact(object):
     @property
     def main_phone(self):
         if getattr(self, '_main_phone', None):
-            return self._main_address
-        phones = self._data.get('Addresses', [])
+            return self._main_phone
+        phones = self._data.get('Phones', [])
         if len(phones) == 0:
             return
         if len(phones) == 1:
-            self._main_address = phones[0]
-            return self._main_address
+            self._main_phone = phones[0]
+            return self._main_phone
         type_priority = ['DEFAULT', 'DDI', 'MOBILE']
         nonblank_phones = []
         for phone in phones:
@@ -99,6 +99,27 @@ class XeroContact(object):
     @property
     def main_address_country(self):
         return self.main_address.get('Country')
+
+    @property
+    def phone(self):
+        main_phone = self.main_phone
+        response = None
+        if not main_phone.get('PhoneNumber'):
+            return response
+        response = main_phone['PhoneNumber']
+        if not main_phone.get('PhoneAreaCode'):
+            return response
+        response = "%s %s" % (
+            main_phone['PhoneAreaCode'],
+            response
+        )
+        if not main_phone.get('PhoneCountryCode'):
+            return response
+        response = "(%s) %s" % (
+            main_phone['PhoneCountryCode'],
+            response
+        )
+        return response
 
     def to_dict(self):
         response = {}
