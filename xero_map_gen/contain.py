@@ -248,15 +248,14 @@ class XeroContact(object):
             writer = csv.DictWriter(
                 dump_file,
                 {
-                    'ContactID': 'ContactID',
-                    'EmailAddress': 'EmailAddress',
-                    'Name': 'Name',
-                    'AddressLine' : 'AddressLine',
-                    'AddressArea' : 'AddressArea',
-                    'AddressPostcode' : 'AddressPostcode',
-                    'AddressState' : 'AddressState',
-                    'AddressCountry' : 'AddressCountry',
+                    'Name': 'Company Name',
+                    'AddressLine' : 'Address',
+                    'AddressArea' : 'Area',
+                    'AddressPostcode' : 'Postcode',
+                    'AddressState' : 'State',
+                    'AddressCountry' : 'Country',
                     'Phone' : 'Phone',
+                    'EmailAddress': 'Email',
                 },
                 extrasaction='ignore'
             )
