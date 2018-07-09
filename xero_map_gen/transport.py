@@ -9,13 +9,13 @@ from xero.exceptions import XeroRateLimitExceeded
 
 from .contain import XeroContact
 from .log import PKG_LOGGER
-from .helper import dump_api_contacts
+from .helper import dump_api_contacts, dump_contacts
 
 
 
 class XeroApiWrapper(Xero):
     """ docstring for XeroApiWrapper. """
-    sleep_time = 5
+    sleep_time = 10
     max_attempts = 3
 
     def __init__(self, rsa_key_path, consumer_key):
@@ -56,13 +56,11 @@ class XeroApiWrapper(Xero):
         assert contact_group_id, "unable to find contact group ID for %s" % name
         group_data = self.contactgroups.get(contact_group_id)
         PKG_LOGGER.debug("group data: %s", pprint.pformat(group_data))
-        api_contacts = []
+        # api_contacts = []
         contacts = []
         for contact_data in group_data[0]['Contacts']:
-            if limit is not None:
-                if limit == 0:
-                    break
-                limit -= 1
+            if limit is not None and limit < 0:
+                break
 
             contact_id = contact_data.get('ContactID', '')
             try:
@@ -71,11 +69,16 @@ class XeroApiWrapper(Xero):
                 break
             assert len(api_contact_data) == 1
             api_contact_data = api_contact_data[0]
-            api_contacts.append(api_contact_data)
-            assert contact_data, "empty api response for contact id %s" % contact_id
+            # api_contacts.append(api_contact_data)
+            assert api_contact_data, "empty api response for contact id %s" % contact_id
             PKG_LOGGER.debug("api contact: %s", pprint.pformat(contact_data))
-            contact_obj = XeroContact(contact_data)
+            contact_obj = XeroContact(api_contact_data)
             PKG_LOGGER.debug("sanitized contact: %s", contact_obj)
+            if not contact_obj.active:
+                continue
             contacts.append(contact_obj)
-        dump_api_contacts(api_contacts)
+            if limit is not None:
+                limit -= 1
+        # dump_api_contacts(api_contacts)
+        dump_contacts(contacts)
         return contacts

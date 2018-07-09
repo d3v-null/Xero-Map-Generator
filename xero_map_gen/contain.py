@@ -121,9 +121,23 @@ class XeroContact(object):
         )
         return response
 
-    def to_dict(self):
-        response = {}
-        for key, value in dir(self):
-            if key.startswith('_'):
-                continue
-            response[key] = value
+    @property
+    def archived(self):
+        return self._data.get('ContactStatus') == 'ARCHIVED'
+
+    @property
+    def active(self):
+        return self._data.get('ContactStatus') == 'ACTIVE'
+
+    @classmethod
+    def flatten_data(cls, data):
+        # TODO: move semiflatten_api_contact here
+        pass
+
+    def flatten_verbose(self):
+        # TODO: move semiflatten_contact here
+        pass
+
+    def flatten(self):
+        # TODO: this
+        pass
