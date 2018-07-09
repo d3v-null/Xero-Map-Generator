@@ -1,6 +1,10 @@
 """ Container classes and utilities for containing data. """
 
 import heapq
+from copy import copy
+import csv
+import tabulate
+
 
 class XeroContactGroup(object):
     pass
@@ -96,9 +100,17 @@ class XeroContact(object):
     def main_address_state(self):
         return self.main_address.get('Region')
 
+    @classmethod
+    def convert_country_code(cls, country_code):
+        # TODO: complete this
+        if country_code == 'AU':
+            return 'Australia'
+        return country_code
+
     @property
     def main_address_country(self):
-        return self.main_address.get('Country')
+        country_code = self.main_address.get('Country', '') or 'AU'
+        return self.convert_country_code(country_code)
 
     @property
     def phone(self):
@@ -129,15 +141,132 @@ class XeroContact(object):
     def active(self):
         return self._data.get('ContactStatus') == 'ACTIVE'
 
-    @classmethod
-    def flatten_data(cls, data):
-        # TODO: move semiflatten_api_contact here
-        pass
+    @property
+    def contact_id(self):
+        return self._data.get('ContactID')
+
+    def flatten_raw(self):
+        flattened = dict()
+        for key in [
+            'ContactID', 'ContactGroups', 'ContactNumber',
+            'ContactStatus', 'EmailAddress', 'Name'
+        ]:
+            flattened[key] = self._data.get(key)
+        for address in self._data['Addresses']:
+            address = copy(address)
+            type = address.pop('AddressType', 'POBOX')
+            key = '%s Address' % type
+            assert key not in flattened, "duplicate key being added"
+            flattened[key] = address
+        for phone in self._data['Phones']:
+            phone = copy(phone)
+            type = phone.pop('PhoneType', 'DEFAULT')
+            key = '%s Phone' % type
+            assert key not in flattened, "duplicate key being added"
+            flattened[key] = phone
+        return flattened
 
     def flatten_verbose(self):
-        # TODO: move semiflatten_contact here
-        pass
+        flattened = self.flatten_raw()
+        for flat_key, attribute in [
+            ('MAIN Address', 'main_address'),
+            ('MAIN Phone', 'main_phone')
+        ]:
+            flattened[flat_key] = getattr(self, attribute)
+        return flattened
 
-    def flatten(self):
-        # TODO: this
-        pass
+    def flatten_sanitized(self):
+        flattened = dict()
+        for key in [
+            'ContactID', 'EmailAddress', 'Name'
+        ]:
+            flattened[key] = self._data.get(key)
+
+        for flat_key, attribute in [
+            ('AddressLine', 'first_main_address_line'),
+            ('AddressArea', 'main_address_area'),
+            ('AddressPostcode', 'main_address_postcode'),
+            ('AddressState', 'main_address_state'),
+            ('AddressCountry', 'main_address_country'),
+            ('Phone', 'phone'),
+        ]:
+            flattened[flat_key] = getattr(self, attribute)
+        return flattened
+
+    @classmethod
+    def dump_contacts_raw_csv(cls, contacts, dump_path='contacts-raw.csv'):
+        with open(dump_path, 'w') as dump_file:
+            writer = csv.DictWriter(
+                dump_file,
+                {
+                    'ContactID': 'ContactID',
+                    'ContactGroups': 'ContactGroups',
+                    'ContactNumber': 'ContactNumber',
+                    'ContactStatus': 'ContactStatus',
+                    'EmailAddress': 'EmailAddress',
+                    'Name': 'Name',
+                    'Address': 'Address',
+                    'Phone': 'Phone',
+                },
+                extrasaction='ignore'
+            )
+            writer.writeheader()
+            for contact in contacts:
+                writer.writerow(contact.flatten_raw())
+
+    @classmethod
+    def dump_contacts_verbose_csv(cls, contacts, dump_path='contacts-verbose.csv'):
+        with open(dump_path, 'w') as dump_file:
+            writer = csv.DictWriter(
+                dump_file,
+                {
+                    'ContactID': 'ContactID',
+                    'ContactGroups': 'ContactGroups',
+                    'ContactNumber': 'ContactNumber',
+                    'ContactStatus': 'ContactStatus',
+                    'EmailAddress': 'EmailAddress',
+                    'Name': 'Name',
+                    'MAIN Address': 'MAIN Address',
+                    'POBOX Address': 'POBOX Address',
+                    'STREET Address': 'STREET Address',
+                    'DELIVERY Address': 'DELIVERY Address',
+                    'MAIN Phone': 'Main Phone',
+                    'DEFAULT Phone': 'DEFAULT Phone',
+                    'DDI Phone': 'DDI Phone',
+                    'MOBILE Phone': 'MOBILE Phone',
+                    'FAX Phone': 'FAX Phone',
+                },
+                extrasaction='ignore'
+            )
+            writer.writeheader()
+            for contact in contacts:
+                writer.writerow(contact.flatten_verbose())
+
+    @classmethod
+    def dump_contacts_sanitized_csv(cls, contacts, dump_path='contacts-sanitized.csv'):
+        with open(dump_path, 'w') as dump_file:
+            writer = csv.DictWriter(
+                dump_file,
+                {
+                    'ContactID': 'ContactID',
+                    'EmailAddress': 'EmailAddress',
+                    'Name': 'Name',
+                    'AddressLine' : 'AddressLine',
+                    'AddressArea' : 'AddressArea',
+                    'AddressPostcode' : 'AddressPostcode',
+                    'AddressState' : 'AddressState',
+                    'AddressCountry' : 'AddressCountry',
+                    'Phone' : 'Phone',
+                },
+                extrasaction='ignore'
+            )
+            writer.writeheader()
+            for contact in contacts:
+                writer.writerow(contact.flatten_sanitized())
+
+    @classmethod
+    def dump_contacts_sanitized_table(cls, contacts):
+        return tabulate.tabulate(
+            [contact.flatten_sanitized() for contact in contacts],
+            headers='keys'
+        )
