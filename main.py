@@ -17,13 +17,27 @@ def main():
     setup_logging(**dict(conf.LogConfig))
     PKG_LOGGER.info("final config is %s", pprint.pformat(conf))
     xero = XeroApiWrapper(**dict(conf.XeroApiConfig))
-    map_contact_groups = conf.BaseConfig.map_contact_groups.split('|')
+    map_contact_groups = conf.FilterConfig.contact_groups.split('|')
     PKG_LOGGER.debug("map contact groups: %s", map_contact_groups)
     contact_limit = conf.BaseConfig.contact_limit or None
     PKG_LOGGER.debug("contact limit: %s", contact_limit)
     map_contacts = xero.get_contacts_in_groups(names=map_contact_groups, limit=contact_limit)
-    # TODO: if filter on state, all contacts must have state
-    PKG_LOGGER.debug("map contacts: \n%s", XeroContact.dump_contacts_sanitized_table(map_contacts))
+    if conf.FilterConfig.states:
+        # filter on state, warn if contact doesn't have state
+        filter_states = [state.upper() for state in conf.FilterConfig.states.split('|')]
+        filtered_contacts = []
+        for contact in map_contacts:
+            state = contact.main_address_state
+            if not state:
+                PKG_LOGGER.warn("Contact has no state set: %s" % contact.flatten_verbose())
+                continue
+            if state.upper() in filter_states:
+                filtered_contacts.append(contact)
+        map_contacts = filtered_contacts
+
+    # TODO: validate addresses
+    PKG_LOGGER.info("map contacts: \n%s", XeroContact.dump_contacts_sanitized_table(map_contacts))
+
     # XeroContact.dump_contacts_raw_csv(map_contacts)
     # XeroContact.dump_contacts_verbose_csv(map_contacts)
     XeroContact.dump_contacts_sanitized_csv(map_contacts, dump_path=conf.BaseConfig.dump_file)

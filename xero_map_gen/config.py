@@ -156,17 +156,6 @@ class LogConfig(RichConfigurable):
     log_file = Unicode('%s.log' % PKG_NAME, help=SUPPRESS)
 
 class BaseConfig(RichConfigurable):
-    map_contact_groups = Unicode(
-        help="Contact groups used to generate map file separated by '|'"
-    )
-
-    @validate('map_contact_groups')
-    def _valid_map_contact_groups(self, proposal):
-        TraitValidation.not_falsey(
-            proposal['map_contact_groups'],
-            "%s.%s" % (self.__class__, 'map_contact_groups')
-        )
-
     contact_limit = Integer(
         default_value=0,
         help="Limit the number of contacts downloaded from the API"
@@ -181,6 +170,29 @@ class BaseConfig(RichConfigurable):
         default_value="contacts.csv",
         help="Location where CSV data is dumped"
     )
+
+class FilterConfig(RichConfigurable):
+    contact_groups = Unicode(
+        help="Filter by Xero contact group names separated by '|'"
+    )
+
+    @validate('contact_groups')
+    def _valid_contact_groups(self, proposal):
+        TraitValidation.not_falsey(
+            proposal['contact_groups'],
+            "%s.%s" % (self.__class__, 'contact_groups')
+        )
+
+    states = Unicode(
+        help="Filter by main address state. Separate states with '|'"
+    )
+
+    @validate('states')
+    def _valid_states(self, proposal):
+        TraitValidation.not_falsey(
+        proposal['states'],
+        "%s.%s" % (self.__class__, 'states')
+        )
 
 def get_argparse_loader():
     # TODO: argparse loader args
@@ -230,12 +242,21 @@ def get_argparse_loader():
                 },
                 'section': 'xero-api'
             },
-            'map-contact-groups': {
-                'trait': 'BaseConfig.map_contact_groups',
+            'filter-contact-groups': {
+                'trait': 'FilterConfig.contact_groups',
                 'add_kwargs': {
-                    'help' : BaseConfig.map_contact_groups.help,
+                    'help' : FilterConfig.contact_groups.help,
                     'metavar': '"GROUP1|GROUP2"'
                 },
+                'section': 'filter'
+            },
+            'filter-states': {
+                'trait': 'FilterConfig.states',
+                'add_kwargs': {
+                    'help' : FilterConfig.states.help,
+                    'metavar': '"STATE1|STATE2"'
+                },
+                'section': 'filter'
             },
             'contact-limit': {
                 'trait': 'BaseConfig.contact_limit',
@@ -260,7 +281,7 @@ def get_argparse_loader():
                     'default': text_type(BaseConfig.dump_file.default_value),
                     'metavar': 'FILE'
                 }
-            }
+            },
         },
         flags={
             'debug': {
@@ -324,11 +345,11 @@ def load_config(argv=None, extra_config_files=None, config_path=None):
 
     # TODO: generate config file list and config_path from cli_config
     extra_config_files = extra_config_files or []
-    if proto_logging_enabled(cli_config):
+    if cli_config.BaseConfig.config_file:
         extra_config_files.append(cli_config.BaseConfig.config_file)
     config = load_file_config(extra_config_files, config_path)
 
-    if log_level_value(cli_config.LogConfig.stream_log_level) < log_level_value(LogConfig.stream_log_level.default_value):
+    if proto_logging_enabled(cli_config):
         ROOT_LOGGER.warning("file config is %s", pprint.pformat(config))
 
     # merge cli_config
