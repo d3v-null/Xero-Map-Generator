@@ -130,9 +130,11 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
             )
             self.parser.add_argument(*add_args, **add_kwargs)
 
+class RichConfigurable(Configurable):
+    # TODO: extra methods for auto generating add_args
+    pass
 
-
-class XeroApiConfig(Configurable):
+class XeroApiConfig(RichConfigurable):
     rsa_key_path = Unicode(help='The path to the Xero API RSA key file')
     consumer_key = Unicode(help='The Xero API Consumer Key')
 
@@ -148,21 +150,21 @@ class XeroApiConfig(Configurable):
             "%s.%s" % (self.__class__, 'consumer_key')
         )
 
-class LogConfig(Configurable):
+class LogConfig(RichConfigurable):
     stream_log_level = Unicode("WARNING", help="Set custom message output level")
     file_log_level = Unicode("DEBUG", help=SUPPRESS)
     log_file = Unicode('%s.log' % PKG_NAME, help=SUPPRESS)
 
-class BaseConfig(Configurable):
-    map_contact_group = Unicode(
-        help="Contact group used to generate map file"
+class BaseConfig(RichConfigurable):
+    map_contact_groups = Unicode(
+        help="Contact groups used to generate map file separated by '|'"
     )
 
-    @validate('map_contact_group')
-    def _valid_map_contact_group(self, proposal):
+    @validate('map_contact_groups')
+    def _valid_map_contact_groups(self, proposal):
         TraitValidation.not_falsey(
-            proposal['map_contact_group'],
-            "%s.%s" % (self.__class__, 'map_contact_group')
+            proposal['map_contact_groups'],
+            "%s.%s" % (self.__class__, 'map_contact_groups')
         )
 
     contact_limit = Integer(
@@ -228,11 +230,11 @@ def get_argparse_loader():
                 },
                 'section': 'xero-api'
             },
-            'map-contact-group': {
-                'trait': 'BaseConfig.map_contact_group',
+            'map-contact-groups': {
+                'trait': 'BaseConfig.map_contact_groups',
                 'add_kwargs': {
-                    'help' : BaseConfig.map_contact_group.help,
-                    'metavar': 'GROUP'
+                    'help' : BaseConfig.map_contact_groups.help,
+                    'metavar': '"GROUP1|GROUP2"'
                 },
             },
             'contact-limit': {

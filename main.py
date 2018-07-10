@@ -17,11 +17,12 @@ def main():
     setup_logging(**dict(conf.LogConfig))
     PKG_LOGGER.info("final config is %s", pprint.pformat(conf))
     xero = XeroApiWrapper(**dict(conf.XeroApiConfig))
-    map_contact_group_name = conf.BaseConfig.map_contact_group
-    PKG_LOGGER.debug("map contact group name: %s", map_contact_group_name)
+    map_contact_groups = conf.BaseConfig.map_contact_groups.split('|')
+    PKG_LOGGER.debug("map contact groups: %s", map_contact_groups)
     contact_limit = conf.BaseConfig.contact_limit or None
     PKG_LOGGER.debug("contact limit: %s", contact_limit)
-    map_contacts = xero.get_contacts_in_group(name=map_contact_group_name, limit=contact_limit)
+    map_contacts = xero.get_contacts_in_groups(names=map_contact_groups, limit=contact_limit)
+    # TODO: if filter on state, all contacts must have state
     PKG_LOGGER.debug("map contacts: \n%s", XeroContact.dump_contacts_sanitized_table(map_contacts))
     # XeroContact.dump_contacts_raw_csv(map_contacts)
     # XeroContact.dump_contacts_verbose_csv(map_contacts)
