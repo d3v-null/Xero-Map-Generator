@@ -2,6 +2,7 @@
 import pprint
 import time
 from builtins import super
+import os
 
 from xero import Xero
 from xero.auth import PrivateCredentials
@@ -20,6 +21,7 @@ class XeroApiWrapper(Xero):
             "xero API args: rsa_key_path: %s; consumer_key: %s",
             rsa_key_path, consumer_key
         )
+        rsa_key_path = os.path.expanduser(rsa_key_path)
 
         with open(rsa_key_path) as key_file:
             rsa_key = key_file.read()

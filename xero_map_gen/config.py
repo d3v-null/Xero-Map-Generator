@@ -7,17 +7,18 @@ Classes for parsing configuration files and command line arguments.
 import pprint
 from argparse import SUPPRESS
 from builtins import super
+import logging
 
-from six import text_type
+from six import text_type, string_types, integer_types
 from traitlets import Any, Bool, Float, Integer, Type, Unicode, Union, validate
 from traitlets.config.configurable import Configurable
 from traitlets.config.loader import (Config, ConfigFileNotFound,
                                      KVArgParseConfigLoader,
-                                     PyFileConfigLoader)
+                                     PyFileConfigLoader, JSONFileConfigLoader)
 
 from . import DESCRIPTION, PKG_NAME
 from .helper import TraitValidation
-from .log import PKG_LOGGER
+from .log import PKG_LOGGER, ROOT_LOGGER
 
 
 class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
@@ -174,6 +175,11 @@ class BaseConfig(Configurable):
         help="Load extra config from file"
     )
 
+    dump_file = Unicode(
+        default_value="contacts.csv",
+        help="Location where CSV data is dumped"
+    )
+
 def get_argparse_loader():
     # TODO: argparse loader args
     return RichKVArgParseConfigLoader(
@@ -244,6 +250,14 @@ def get_argparse_loader():
                     'default' : text_type(BaseConfig.config_file.default_value),
                     'metavar': 'FILE'
                 },
+            },
+            'dump-file': {
+                'trait': 'BaseConfig.dump_file',
+                'add_kwargs': {
+                    'help': BaseConfig.dump_file.help,
+                    'default': text_type(BaseConfig.dump_file.default_value),
+                    'metavar': 'FILE'
+                }
             }
         },
         flags={
@@ -274,7 +288,12 @@ def load_cli_config(argv=None):
 def load_file_config(extra_config_files=None, config_path=None):
     config = Config()
     for cf in extra_config_files:
-        loader = PyFileConfigLoader(cf, path=config_path)
+        if cf[-3:] == ".py":
+            loader = PyFileConfigLoader(cf, path=config_path)
+        elif cf[-5:] == ".json":
+            loader = JSONFileConfigLoader(cf, path=config_path)
+        else:
+            continue
         try:
             next_config = loader.load_config()
         except ConfigFileNotFound:
@@ -285,16 +304,33 @@ def load_file_config(extra_config_files=None, config_path=None):
             config.merge(next_config)
     return config
 
+def log_level_value(log_level):
+    if isinstance(log_level, integer_types):
+        return log_level
+    if isinstance(log_level, string_types):
+        if hasattr(logging, log_level):
+            return getattr(logging, log_level)
+
+def proto_logging_enabled(config):
+    return log_level_value(config.LogConfig.stream_log_level) \
+        < log_level_value(LogConfig.stream_log_level.default_value)
+
 def load_config(argv=None, extra_config_files=None, config_path=None):
     cli_config = load_cli_config(argv)
-    PKG_LOGGER.info("cli config is %s", pprint.pformat(cli_config))
+    if proto_logging_enabled(cli_config):
+        ROOT_LOGGER.warning("cli config is %s", pprint.pformat(cli_config))
 
     # TODO: generate config file list and config_path from cli_config
     extra_config_files = extra_config_files or []
+    if proto_logging_enabled(cli_config):
+        extra_config_files.append(cli_config.BaseConfig.config_file)
     config = load_file_config(extra_config_files, config_path)
-    PKG_LOGGER.info("file config is %s", pprint.pformat(config))
+
+    if log_level_value(cli_config.LogConfig.stream_log_level) < log_level_value(LogConfig.stream_log_level.default_value):
+        ROOT_LOGGER.warning("file config is %s", pprint.pformat(config))
 
     # merge cli_config
     config.merge(cli_config)
-    PKG_LOGGER.info("final config is %s", pprint.pformat(config))
+    if proto_logging_enabled(config):
+        ROOT_LOGGER.warning("final config is %s", pprint.pformat(config))
     return config
