@@ -3,13 +3,14 @@ import pprint
 import time
 from builtins import super
 import os
+from tqdm import tqdm
 
 from xero import Xero
 from xero.auth import PrivateCredentials
 from xero.exceptions import XeroRateLimitExceeded
 
 from .contain import XeroContact
-from .log import PKG_LOGGER
+from .log import PKG_LOGGER, log_stream_quiet
 
 class XeroApiWrapper(Xero):
     """ docstring for XeroApiWrapper. """
@@ -44,28 +45,34 @@ class XeroApiWrapper(Xero):
                 continue
         raise UserWarning("Reached maximum number attempts (%s) for %s %s" % (self.max_attempts, query, endpoint))
 
-    def get_contacts_by_ids(self, contact_ids, limit=None, chunk_size=10):
+    def get_contacts_by_ids(self, contact_ids, limit=None, chunk_size=50):
         # TODO: local caching and check modified time
         limit = limit or None
+        total = len(contact_ids)
+        if limit is not None:
+            total = min(total, limit)
         contacts = []
-        while contact_ids:
-            if limit is not None:
-                if limit <= 0:
-                    break
-                chunk_size = min(chunk_size, limit)
-            query_contact_ids = contact_ids[:chunk_size]
-            contact_ids = contact_ids[chunk_size:]
-            filter_query = 'ContactStatus=="ACTIVE"&&('
-            filter_query += "||".join([
-                'ID==Guid("%s")' % contact_id for contact_id in query_contact_ids
-            ])
-            filter_query += ")"
-            contacts_raw = self.rate_limit_retry_query('contacts', 'filter', raw=filter_query)
-            contacts.extend([
-                XeroContact(contact_raw) for contact_raw in contacts_raw
-            ])
-            if limit is not None:
-                limit -= chunk_size
+        with tqdm(total=total) as pbar:
+            while contact_ids:
+                if limit is not None:
+                    if limit <= 0:
+                        break
+                    chunk_size = min(chunk_size, limit)
+                query_contact_ids = contact_ids[:chunk_size]
+                contact_ids = contact_ids[chunk_size:]
+                filter_query = 'ContactStatus=="ACTIVE"&&('
+                filter_query += "||".join([
+                    'ID==Guid("%s")' % contact_id for contact_id in query_contact_ids
+                ])
+                filter_query += ")"
+                contacts_raw = self.rate_limit_retry_query('contacts', 'filter', raw=filter_query)
+                contacts.extend([
+                    XeroContact(contact_raw) for contact_raw in contacts_raw
+                ])
+                if limit is not None:
+                    limit -= chunk_size
+                if not log_stream_quiet():
+                    pbar.update(chunk_size)
         return contacts
 
     def get_contacts_in_groups(self, names=None, contact_group_ids=None, limit=None):

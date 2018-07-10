@@ -1,6 +1,8 @@
-import os
 import logging
+import os
+
 import coloredlogs
+from six import integer_types, string_types, text_type
 
 from . import PKG_NAME
 
@@ -35,5 +37,20 @@ def setup_logging(stream_log_level=None, log_file=None, file_log_level=None):
         logging.info("stream log level: %s", PKG_STREAM_HANDLER.level)
     if PKG_FILE_HANDLER:
         logging.info("file log level: %s", PKG_FILE_HANDLER.level)
+
+def log_level_value(log_level):
+    if isinstance(log_level, integer_types):
+        return log_level
+    if isinstance(log_level, string_types):
+        if hasattr(logging, log_level):
+            return getattr(logging, log_level)
+
+def log_level_quiet(log_level):
+    return log_level_value(log_level) > logging.WARNING
+
+def log_stream_quiet():
+    if PKG_STREAM_HANDLER:
+        return log_level_quiet(PKG_STREAM_HANDLER.level)
+
 
 setup_logging()

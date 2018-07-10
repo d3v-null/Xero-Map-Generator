@@ -4,21 +4,22 @@ Configuration.
 Classes for parsing configuration files and command line arguments.
 """
 
+import logging
 import pprint
 from argparse import SUPPRESS
 from builtins import super
-import logging
 
-from six import text_type, string_types, integer_types
+from six import integer_types, string_types, text_type
 from traitlets import Any, Bool, Float, Integer, Type, Unicode, Union, validate
 from traitlets.config.configurable import Configurable
 from traitlets.config.loader import (Config, ConfigFileNotFound,
+                                     JSONFileConfigLoader,
                                      KVArgParseConfigLoader,
-                                     PyFileConfigLoader, JSONFileConfigLoader)
+                                     PyFileConfigLoader)
 
 from . import DESCRIPTION, PKG_NAME
 from .helper import TraitValidation
-from .log import PKG_LOGGER, ROOT_LOGGER
+from .log import PKG_LOGGER, ROOT_LOGGER, log_level_quiet
 
 
 class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
@@ -39,7 +40,7 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
             ```python
             {
                 'alias' : {
-                    'trait': 'Configurable.trait',
+                    'trait': 'Configurable.trait'
                     'add_args': ['extra_arguments'],
                     'add_kwargs': {
                         'keyword': 'extra_keyword_argument',
@@ -184,6 +185,7 @@ class FilterConfig(RichConfigurable):
         )
 
     states = Unicode(
+        "",
         help="Filter by main address state. Separate states with '|'"
     )
 
@@ -192,6 +194,18 @@ class FilterConfig(RichConfigurable):
         TraitValidation.not_falsey(
         proposal['states'],
         "%s.%s" % (self.__class__, 'states')
+        )
+
+    countries = Unicode(
+        "",
+        help="Filter by main address country. Separate countries with '|'"
+    )
+
+    @validate('countries')
+    def _valid_countries(self, proposal):
+        TraitValidation.not_falsey(
+        proposal['countries'],
+        "%s.%s" % (self.__class__, 'countries')
         )
 
 def get_argparse_loader():
@@ -254,7 +268,17 @@ def get_argparse_loader():
                 'trait': 'FilterConfig.states',
                 'add_kwargs': {
                     'help' : FilterConfig.states.help,
+                    'default': text_type(FilterConfig.states.default_value),
                     'metavar': '"STATE1|STATE2"'
+                },
+                'section': 'filter'
+            },
+            'filter-countries': {
+                'trait': 'FilterConfig.countries',
+                'add_kwargs': {
+                    'help' : FilterConfig.countries.help,
+                    'default': text_type(FilterConfig.countries.default_value),
+                    'metavar': '"COUNTRY1|COUNTRY2"'
                 },
                 'section': 'filter'
             },
@@ -327,21 +351,10 @@ def load_file_config(extra_config_files=None, config_path=None):
             config.merge(next_config)
     return config
 
-def log_level_value(log_level):
-    if isinstance(log_level, integer_types):
-        return log_level
-    if isinstance(log_level, string_types):
-        if hasattr(logging, log_level):
-            return getattr(logging, log_level)
-
-def proto_logging_enabled(config):
-    return log_level_value(config.LogConfig.stream_log_level) \
-        < log_level_value(LogConfig.stream_log_level.default_value)
-
 def load_config(argv=None, extra_config_files=None, config_path=None):
     cli_config = load_cli_config(argv)
-    if proto_logging_enabled(cli_config):
-        ROOT_LOGGER.warning("cli config is %s", pprint.pformat(cli_config))
+    if not log_level_quiet(cli_config.LogConfig.stream_log_level):
+        ROOT_LOGGER.info("cli config is \n%s", pprint.pformat(cli_config))
 
     # TODO: generate config file list and config_path from cli_config
     extra_config_files = extra_config_files or []
@@ -349,11 +362,11 @@ def load_config(argv=None, extra_config_files=None, config_path=None):
         extra_config_files.append(cli_config.BaseConfig.config_file)
     config = load_file_config(extra_config_files, config_path)
 
-    if proto_logging_enabled(cli_config):
-        ROOT_LOGGER.warning("file config is %s", pprint.pformat(config))
+    if not log_level_quiet(cli_config.LogConfig.stream_log_level):
+        ROOT_LOGGER.info("file config is \n%s", pprint.pformat(config))
 
     # merge cli_config
     config.merge(cli_config)
-    if proto_logging_enabled(config):
-        ROOT_LOGGER.warning("final config is %s", pprint.pformat(config))
+    if not log_level_quiet(cli_config.LogConfig.stream_log_level):
+        ROOT_LOGGER.warning("config is \n%s", pprint.pformat(config))
     return config
