@@ -22,5 +22,6 @@ EOF
 ## Examples
 
 ```
-python main.py --map-contact-group 'Gordon Cohen Agencies' --dump-file "stockists_nsw_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
+xero_map_gen --filter-contact-groups 'Gordon Cohen Agencies|Joli Agencies|KAS Agencies' --filter-states 'NSW|ACT' --dump-file "stockists_nsw_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
+xero_map_gen --filter-contact-groups 'Direct' --filter-states 'TAS' --dump-file "stockists_tas_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
 ```

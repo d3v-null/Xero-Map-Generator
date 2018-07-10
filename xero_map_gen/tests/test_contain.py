@@ -86,7 +86,7 @@ class XeroContactTestCase(ContainTestCase):
             "Area": "Sydney",
             "Postcode": "1033",
             "State": "NSW",
-            "Country": "AU",
+            "Country": "Australia",
             "Phone": "02 68891038",
         }
 
@@ -94,7 +94,7 @@ class XeroContactTestCase(ContainTestCase):
 
         self.assertEqual(contact.company_name, sanitized_data['Company Name'])
         self.assertEqual(contact.main_address, api_data['Addresses'][1])
-        self.assertEqual(contact.first_main_address_line, sanitized_data['Address'])
+        self.assertEqual(contact.main_address_lines, sanitized_data['Address'])
         self.assertEqual(contact.main_address_area, sanitized_data['Area'])
         self.assertEqual(contact.main_address_postcode, sanitized_data['Postcode'])
         self.assertEqual(contact.main_address_state, sanitized_data['State'])
@@ -147,7 +147,7 @@ class XeroContactTestCase(ContainTestCase):
                 'Addresses': addresses[-i:] + addresses[:-i],
             }
             contact = XeroContact(api_data)
-            self.assertEqual(contact.main_address, addresses[2])
+            self.assertEqual(contact.main_address, addresses[1])
 
 
 

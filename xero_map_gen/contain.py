@@ -28,7 +28,11 @@ class XeroContact(object):
         if len(addresses) == 1:
             self._main_address = addresses[0]
             return self._main_address
-        type_priority = ['POBOX', 'STREET', 'DELIVERY']
+        type_priority = [
+            'STREET',
+            'POBOX',
+            'DELIVERY'
+        ]
         nonblank_addresses = []
         blank_addresses = []
         for address in addresses:
@@ -81,12 +85,19 @@ class XeroContact(object):
             return self._data['Name']
 
     @property
-    def first_main_address_line(self):
+    def main_address_lines(self):
         main_address = self.main_address
+        lines = []
         for line in range(1, 5):
             key = "AddressLine%d" % line
-            if key in self.main_address and self.main_address[key]:
-                return self.main_address[key]
+            if key not in self.main_address:
+                continue
+            line = self.main_address[key]
+            if line:
+                lines.append(line)
+        return ", ".join(lines)
+
+
 
     @property
     def main_address_area(self):
@@ -183,7 +194,7 @@ class XeroContact(object):
             flattened[key] = self._data.get(key)
 
         for flat_key, attribute in [
-            ('AddressLine', 'first_main_address_line'),
+            ('AddressLine', 'main_address_lines'),
             ('AddressArea', 'main_address_area'),
             ('AddressPostcode', 'main_address_postcode'),
             ('AddressState', 'main_address_state'),
