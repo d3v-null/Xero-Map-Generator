@@ -116,7 +116,7 @@ class XeroContact(object):
     def phone(self):
         main_phone = self.main_phone
         response = None
-        if not main_phone.get('PhoneNumber'):
+        if not (main_phone and main_phone.get('PhoneNumber')):
             return response
         response = main_phone['PhoneNumber']
         if not main_phone.get('PhoneAreaCode'):
