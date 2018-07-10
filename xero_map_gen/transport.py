@@ -45,7 +45,7 @@ class XeroApiWrapper(Xero):
                 continue
         raise UserWarning("Reached maximum number attempts (%s) for %s %s" % (self.max_attempts, query, endpoint))
 
-    def get_contacts_by_ids(self, contact_ids, limit=None, chunk_size=50):
+    def get_contacts_by_ids(self, contact_ids, limit=None, chunk_size=20):
         # TODO: local caching and check modified time
         limit = limit or None
         total = len(contact_ids)
