@@ -8,6 +8,7 @@ import logging
 import pprint
 from argparse import SUPPRESS
 from builtins import super
+import os
 
 from six import integer_types, string_types, text_type
 from traitlets import Any, Bool, Float, Integer, Type, Unicode, Union, validate
@@ -333,10 +334,11 @@ def trait_defined_true(trait):
         return
     return trait
 
-def load_cli_config(argv=None):
+def load_cli_config(argv=None, has_extra_config=None):
     argparse_loader = get_argparse_loader()
     cli_config = argparse_loader.load_config(argv)
     if not any([
+        has_extra_config,
         trait_defined_true(cli_config.BaseConfig.config_file),
         all([
             trait_defined_true(cli_config.XeroApiConfig.rsa_key_path),
@@ -350,6 +352,9 @@ def load_cli_config(argv=None):
 
 def load_file_config(extra_config_files=None, config_path=None):
     config = Config()
+    extra_config_files = list(set([
+        os.path.expanduser(conf) for conf in extra_config_files
+    ]))
     for cf in extra_config_files:
         if cf[-3:] == ".py":
             loader = PyFileConfigLoader(cf, path=config_path)

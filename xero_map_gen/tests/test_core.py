@@ -16,7 +16,7 @@ class AbstractXMGTestCase(unittest.TestCase):
     debug = False
 
     def setUp(self):
-        cli_config = load_cli_config(self.override_args.split())
+        cli_config = load_cli_config(self.override_args.split(), has_extra_config=True)
         config_files = []
         if self.config_file:
             self.config_file
