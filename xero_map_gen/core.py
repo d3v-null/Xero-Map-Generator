@@ -17,29 +17,25 @@ def main():
     contact_limit = conf.BaseConfig.contact_limit or None
     PKG_LOGGER.debug("contact limit: %s", contact_limit)
     map_contacts = xero.get_contacts_in_groups(names=map_contact_groups, limit=contact_limit)
-    if 'states' in conf.FilterConfig:
-        # filter on state, warn if contact doesn't have state
-        filter_states = [state.upper() for state in conf.FilterConfig.states.split('|')]
+    for filter_attr, contact_attr in [
+        ('states', 'main_address_state'),
+        ('countries', 'main_address_country'),
+    ]:
+        if filter_attr not in conf.FilterConfig:
+            continue
+        filter_values = [value.upper() for value in getattr(conf.FilterConfig, filter_attr).split('|')]
         filtered_contacts = []
         for contact in map_contacts:
-            state = contact.main_address_state
-            if not state:
-                PKG_LOGGER.warn("Contact has no state set: %s" % pprint.pformat(contact.flatten_verbose()))
-                continue
-            if state.upper() in filter_states:
+            contact_value = getattr(contact,contact_attr)
+            if not contact_value:
+                PKG_LOGGER.warn("Contact has no value for %s filter: %s" % (
+                    filter_attr,
+                    pprint.pformat(contact.flatten_verbose())
+                ))
+            if contact_value.upper() in filter_values:
                 filtered_contacts.append(contact)
-        map_contacts = filtered_contacts
-    if 'countries' in conf.FilterConfig:
-        # filter on country, warn if contact doesn't have country
-        filter_countries = [country.upper() for country in conf.FilterConfig.countries.split('|')]
-        filtered_contacts = []
-        for contact in map_contacts:
-            country = contact.main_address_country
-            if not country:
-                PKG_LOGGER.warn("Contact has no country set: %s" % pprint.pformat(contact.flatten_verbose()))
-                continue
-            if country.upper() in filter_countries:
-                filtered_contacts.append(contact)
+        if not filtered_contacts:
+            PKG_LOGGER.error("No contacts matching %s filter" % filter_attr)
         map_contacts = filtered_contacts
 
     # TODO: validate addresses
