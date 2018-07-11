@@ -17,7 +17,7 @@ def main():
     contact_limit = conf.BaseConfig.contact_limit or None
     PKG_LOGGER.debug("contact limit: %s", contact_limit)
     map_contacts = xero.get_contacts_in_groups(names=map_contact_groups, limit=contact_limit)
-    if conf.FilterConfig.states:
+    if 'states' in conf.FilterConfig:
         # filter on state, warn if contact doesn't have state
         filter_states = [state.upper() for state in conf.FilterConfig.states.split('|')]
         filtered_contacts = []
@@ -29,7 +29,7 @@ def main():
             if state.upper() in filter_states:
                 filtered_contacts.append(contact)
         map_contacts = filtered_contacts
-    if conf.FilterConfig.countries:
+    if 'countries' in conf.FilterConfig:
         # filter on country, warn if contact doesn't have country
         filter_countries = [country.upper() for country in conf.FilterConfig.countries.split('|')]
         filtered_contacts = []

@@ -5,13 +5,16 @@ Classes for parsing configuration files and command line arguments.
 """
 
 import logging
+import os
 import pprint
+import re
 from argparse import SUPPRESS
 from builtins import super
-import os
+from copy import copy
 
 from six import integer_types, string_types, text_type
-from traitlets import Any, Bool, Float, Integer, Type, Unicode, Union, validate
+from traitlets import (Any, Bool, Float, Integer, TraitType, Type, Unicode,
+                       Union, getmembers, validate)
 from traitlets.config.configurable import Configurable
 from traitlets.config.loader import (Config, ConfigFileNotFound,
                                      JSONFileConfigLoader,
@@ -134,11 +137,38 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
 
 class RichConfigurable(Configurable):
     # TODO: extra methods for auto generating add_args
-    pass
+    @classmethod
+    def trait_argparse_aliases(cls):
+        traits = dict([memb for memb in getmembers(cls) if
+                     isinstance(memb[1], TraitType)])
+        aliases = {}
+        for key, trait_obj in traits.items():
+            if key in ['config', 'parent']:
+                continue
+            alias_dict = {}
+            trait_meta = copy(trait_obj.metadata)
+            alias_key = trait_meta.pop('switch', re.sub('_', '-', key))
+            alias_dict['add_kwargs'] = trait_meta
+            # if hasattr(trait_obj, 'default_value'):
+            if trait_obj.default_value != '':
+                alias_dict['add_kwargs'].update({
+                    'default':text_type(trait_obj.default_value)
+                })
+            alias_dict['trait'] = "%s.%s" % (cls.__name__, key)
+            alias_dict['section'] = cls.__name__.lower()
+
+            aliases[alias_key] = alias_dict
+        return aliases
 
 class XeroApiConfig(RichConfigurable):
-    rsa_key_path = Unicode(help='The path to the Xero API RSA key file')
-    consumer_key = Unicode(help='The Xero API Consumer Key')
+    rsa_key_path = Unicode(
+        help='The path to the Xero API RSA key file',
+        switch="xero-key-path", metavar='PATH'
+    )
+    consumer_key = Unicode(
+        help='The Xero API Consumer Key',
+        switch="xero-consumer-key", metavar='KEY'
+    )
 
     @validate('rsa_key_path')
     def _valid_rsa_key_path(self, proposal):
@@ -153,29 +183,43 @@ class XeroApiConfig(RichConfigurable):
         )
 
 class LogConfig(RichConfigurable):
-    stream_log_level = Unicode("WARNING", help="Set custom message output level")
-    file_log_level = Unicode("DEBUG", help=SUPPRESS)
-    log_file = Unicode('%s.log' % PKG_NAME, help=SUPPRESS)
+    stream_log_level = Unicode(
+        "WARNING",
+        help="Set custom message output level",
+        switch="verbosity", metavar='LEVEL'
+    )
+    file_log_level = Unicode(
+        "DEBUG",
+        help=SUPPRESS,
+        metavar='LEVEL'
+    )
+    log_file = Unicode(
+        '%s.log' % PKG_NAME,
+        help=SUPPRESS,
+        metavar='PATH'
+    )
 
 class BaseConfig(RichConfigurable):
     contact_limit = Integer(
-        default_value=0,
-        help="Limit the number of contacts downloaded from the API"
+        help="Limit the number of contacts downloaded from the API",
+        metavar='LIMIT'
     )
 
     config_file = Unicode(
-        default_value="",
-        help="Load extra config from file"
+        help="Load extra config from file",
+        metavar='PATH'
     )
 
     dump_file = Unicode(
         default_value="contacts.csv",
-        help="Location where CSV data is dumped"
+        help="Location where CSV data is dumped",
+        metavar='PATH'
     )
 
 class FilterConfig(RichConfigurable):
     contact_groups = Unicode(
-        help="Filter by Xero contact group names separated by '|'"
+        help="Filter by Xero contact group names separated by '|'",
+        switch="filter-contact-groups", metavar='"GROUP1|GROUP2"'
     )
 
     @validate('contact_groups')
@@ -186,8 +230,8 @@ class FilterConfig(RichConfigurable):
         )
 
     states = Unicode(
-        "",
-        help="Filter by main address state. Separate states with '|'"
+        help="Filter by main address state. Separate states with '|'",
+        switch="filter-states", metavar='"STATE1|STATE2"'
     )
 
     @validate('states')
@@ -198,8 +242,8 @@ class FilterConfig(RichConfigurable):
         )
 
     countries = Unicode(
-        "",
-        help="Filter by main address country. Separate countries with '|'"
+        help="Filter by main address country. Separate countries with '|'",
+        switch="filter-countries", metavar='"COUNTRY1|COUNTRY2"'
     )
 
     @validate('countries')
@@ -211,103 +255,17 @@ class FilterConfig(RichConfigurable):
 
 def get_argparse_loader():
     # TODO: argparse loader args
+    aliases = {}
+    for config_class in [
+        XeroApiConfig,
+        LogConfig,
+        BaseConfig,
+        FilterConfig,
+    ]:
+        aliases.update(config_class.trait_argparse_aliases())
     return RichKVArgParseConfigLoader(
         # TODO: generate alias argparse data from Configurable object directly
-        aliases={
-            'verbosity': {
-                'trait': 'LogConfig.stream_log_level',
-                'add_kwargs': {
-                    'help': LogConfig.stream_log_level.help,
-                    'default': text_type(LogConfig.stream_log_level.default_value),
-                    'metavar': 'LEVEL'
-                },
-                'section': 'logging',
-            },
-            'log-level': {
-                'trait': 'LogConfig.file_log_level',
-                'add_kwargs': {
-                    'help': LogConfig.file_log_level.help,
-                    'default': text_type(LogConfig.file_log_level.default_value),
-                    'metavar': 'LEVEL'
-                },
-                'section': 'logging',
-            },
-            'log-file': {
-                'trait': 'LogConfig.log_file',
-                'add_kwargs': {
-                    'help': LogConfig.log_file.help,
-                    'default': text_type(LogConfig.log_file.default_value),
-                    'metavar': 'PATH'
-                },
-                'section': 'logging',
-            },
-            'xero-key-path': {
-                'trait': 'XeroApiConfig.rsa_key_path',
-                'add_kwargs': {
-                    'help' : XeroApiConfig.rsa_key_path.help,
-                    'metavar' : 'PATH'
-                },
-                'section': 'xero-api'
-            },
-            'xero-consumer-key': {
-                'trait': 'XeroApiConfig.consumer_key',
-                'add_kwargs': {
-                    'help' : XeroApiConfig.consumer_key.help,
-                    'metavar': 'KEY'
-                },
-                'section': 'xero-api'
-            },
-            'filter-contact-groups': {
-                'trait': 'FilterConfig.contact_groups',
-                'add_kwargs': {
-                    'help' : FilterConfig.contact_groups.help,
-                    'metavar': '"GROUP1|GROUP2"'
-                },
-                'section': 'filter'
-            },
-            'filter-states': {
-                'trait': 'FilterConfig.states',
-                'add_kwargs': {
-                    'help' : FilterConfig.states.help,
-                    'default': text_type(FilterConfig.states.default_value),
-                    'metavar': '"STATE1|STATE2"'
-                },
-                'section': 'filter'
-            },
-            'filter-countries': {
-                'trait': 'FilterConfig.countries',
-                'add_kwargs': {
-                    'help' : FilterConfig.countries.help,
-                    'default': text_type(FilterConfig.countries.default_value),
-                    'metavar': '"COUNTRY1|COUNTRY2"'
-                },
-                'section': 'filter'
-            },
-            'contact-limit': {
-                'trait': 'BaseConfig.contact_limit',
-                'add_kwargs': {
-                    'help' : BaseConfig.contact_limit.help,
-                    'default' : text_type(BaseConfig.contact_limit.default_value),
-                    'metavar': 'LIMIT'
-                },
-            },
-            'config-file': {
-                'trait': 'BaseConfig.config_file',
-                'add_kwargs': {
-                    'help' : BaseConfig.config_file.help,
-                    'default' : text_type(BaseConfig.config_file.default_value),
-                    'metavar': 'FILE'
-                },
-            },
-            'dump-file': {
-                'trait': 'BaseConfig.dump_file',
-                'add_kwargs': {
-                    'help': BaseConfig.dump_file.help,
-                    'default': text_type(BaseConfig.dump_file.default_value),
-                    'metavar': 'FILE'
-                }
-            },
-        },
+        aliases=aliases,
         flags={
             'debug': {
                 'value': ({'LogConfig': {'stream_log_level':'DEBUG'}}, 'display debug messages'),
@@ -328,21 +286,20 @@ def get_argparse_loader():
         description=DESCRIPTION,
     )
 
-def trait_defined_true(trait):
+def trait_defined_true(config, trait):
     """ Check if a trait is defined and not falsey. """
-    if isinstance(trait, LazyConfigValue):
-        return
-    return trait
+    if trait in config:
+        return config.trait
 
 def load_cli_config(argv=None, has_extra_config=None):
     argparse_loader = get_argparse_loader()
     cli_config = argparse_loader.load_config(argv)
     if not any([
         has_extra_config,
-        trait_defined_true(cli_config.BaseConfig.config_file),
+        trait_defined_true(cli_config.BaseConfig, 'config_file'),
         all([
-            trait_defined_true(cli_config.XeroApiConfig.rsa_key_path),
-            trait_defined_true(cli_config.XeroApiConfig.consumer_key)
+            trait_defined_true(cli_config.XeroApiConfig, 'rsa_key_path'),
+            trait_defined_true(cli_config.XeroApiConfig, 'consumer_key')
         ])
     ]):
         ROOT_LOGGER.error("To connect to the Xero API, you must either specify a Xero API consumer key or a config file containing such a key")

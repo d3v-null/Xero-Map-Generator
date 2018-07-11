@@ -21,7 +21,7 @@ class AbstractXMGTestCase(unittest.TestCase):
         if self.config_file:
             self.config_file
             config_files.append(self.config_file)
-        if cli_config.BaseConfig.config_file:
+        if 'config_file' in cli_config.BaseConfig and cli_config.BaseConfig.config_file:
             config_files.append(cli_config.BaseConfig.config_file)
         self.conf = load_file_config(config_files, self.config_dir)
         self.conf.merge(cli_config)
