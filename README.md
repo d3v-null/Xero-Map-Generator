@@ -23,7 +23,10 @@ EOF
 
 ```
 xero_map_gen --filter-contact-groups 'Gordon Cohen Agencies|Joli Agencies|KAS Agencies' --filter-states 'NSW|ACT' --dump-file "stockists_nsw_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
+xero_map_gen --filter-contact-groups 'Joli Agencies'  --filter-states 'QLD' --dump-file "stockists_qld_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
+xero_map_gen --filter-contact-groups 'Louise Cargill' --dump-file "stockists_vic_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
+xero_map_gen --filter-contact-groups 'Jenny Atkins' --dump-file "stockists_sa_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
 xero_map_gen --filter-contact-groups 'Direct' --filter-states 'TAS' --dump-file "stockists_tas_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
 xero_map_gen --filter-contact-groups 'Direct' --filter-states 'WA' --dump-file "stockists_wa_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
-xero_map_gen --filter-contact-groups 'Direct' --filter-states 'WA' --dump-file "stockists_nt_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
+xero_map_gen --filter-contact-groups 'Direct' --filter-states 'NT' --dump-file "stockists_nt_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
 ```

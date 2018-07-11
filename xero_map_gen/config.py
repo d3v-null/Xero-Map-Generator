@@ -14,7 +14,7 @@ from traitlets import Any, Bool, Float, Integer, Type, Unicode, Union, validate
 from traitlets.config.configurable import Configurable
 from traitlets.config.loader import (Config, ConfigFileNotFound,
                                      JSONFileConfigLoader,
-                                     KVArgParseConfigLoader,
+                                     KVArgParseConfigLoader, LazyConfigValue,
                                      PyFileConfigLoader)
 
 from . import DESCRIPTION, PKG_NAME
@@ -327,9 +327,25 @@ def get_argparse_loader():
         description=DESCRIPTION,
     )
 
+def trait_defined_true(trait):
+    """ Check if a trait is defined and not falsey. """
+    if isinstance(trait, LazyConfigValue):
+        return
+    return trait
+
 def load_cli_config(argv=None):
     argparse_loader = get_argparse_loader()
     cli_config = argparse_loader.load_config(argv)
+    if not any([
+        trait_defined_true(cli_config.BaseConfig.config_file),
+        all([
+            trait_defined_true(cli_config.XeroApiConfig.rsa_key_path),
+            trait_defined_true(cli_config.XeroApiConfig.consumer_key)
+        ])
+    ]):
+        ROOT_LOGGER.error("To connect to the Xero API, you must either specify a Xero API consumer key or a config file containing such a key")
+        argparse_loader.parser.print_usage()
+        exit()
     return cli_config
 
 def load_file_config(extra_config_files=None, config_path=None):

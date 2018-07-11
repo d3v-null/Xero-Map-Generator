@@ -29,8 +29,9 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as readme_file:
 VERSION = ""
 DESCRIPTION = ""
 with open(path.join(HERE, '%s/__init__.py' % PKG_NAME), encoding='utf-8') as init_file:
-    VERSION = re.search(r"^__version__\s*=\s*['\"]([^'\"]*)['\"]", init_file.read(), re.MULTILINE).group(1)
-    DESCRIPTION = re.search(r"^DESCRIPTION\s*=\s*['\"]([^'\"]*)['\"]", init_file.read(), re.MULTILINE).group(1)
+    init_file_contents = init_file.read()
+    VERSION = re.search(r"^__version__\s*=\s*['\"]([^'\"]*)['\"]", init_file_contents, re.MULTILINE).group(1)
+    DESCRIPTION = re.search(r"^DESCRIPTION\s*=\s*['\"]([^'\"]*)['\"]", init_file_contents, re.MULTILINE).group(1)
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
@@ -187,11 +188,11 @@ setup(
     #
     # For example, the following would provide a command called `sample` which
     # executes the function `main` from this package when invoked:
-    # entry_points={  # Optional
-    #     'console_scripts': [
-    #         'sample=sample:main',
-    #     ],
-    # },
+    entry_points={  # Optional
+        'console_scripts': [
+            'xero_map_gen=xero_map_gen.core:main',
+        ],
+    },
 
     # List additional URLs that are relevant to your project as a dict.
     #
