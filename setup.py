@@ -190,7 +190,7 @@ setup(
     # executes the function `main` from this package when invoked:
     entry_points={  # Optional
         'console_scripts': [
-            'xero_map_gen=xero_map_gen.core:main',
+            '{0}={0}.core:main'.format(PKG_NAME),
         ],
     },
 
