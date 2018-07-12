@@ -330,13 +330,13 @@ def load_file_config(extra_config_files=None, config_path=None):
     return config
 
 def load_config(argv=None, extra_config_files=None, config_path=None):
-    cli_config = load_cli_config(argv)
+    cli_config = load_cli_config(argv, has_extra_config=extra_config_files)
     if not log_level_quiet(cli_config.LogConfig.stream_log_level):
         ROOT_LOGGER.info("cli config is \n%s", pprint.pformat(cli_config))
 
     # TODO: generate config file list and config_path from cli_config
     extra_config_files = extra_config_files or []
-    if cli_config.BaseConfig.config_file:
+    if 'config_file' in cli_config.BaseConfig:
         extra_config_files.append(cli_config.BaseConfig.config_file)
     config = load_file_config(extra_config_files, config_path)
 

@@ -7,9 +7,9 @@ from xero_map_gen.transport import XeroApiWrapper
 from xero_map_gen.log import setup_logging, PKG_LOGGER
 from xero_map_gen.contain import XeroContact
 
-def main():
+def main(argv=None):
     """ main. """
-    conf = load_config()
+    conf = load_config(argv)
     setup_logging(**dict(conf.LogConfig))
     xero = XeroApiWrapper(**dict(conf.XeroApiConfig))
     map_contact_groups = conf.FilterConfig.contact_groups.split('|')
