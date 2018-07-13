@@ -5,9 +5,73 @@ from copy import copy
 import csv
 import tabulate
 
+class XeroObjectGroup(object):
+    @classmethod
+    def dump_items_csv(cls, items, dump_path='items.csv', names=None, flatten_attr=None):
+        with open(dump_path, 'w') as dump_path:
+            writer = csv.DictWriter(dump_path, names, extrasaction='ignore')
+            writer.writeheader()
+            for item in items:
+                if flatten_attr:
+                    item = getattr(item, flatten_attr)()
+                else:
+                    item = getattr(item, '_data')
+                writer.writerow(item)
 
-class XeroContactGroup(object):
-    pass
+class XeroContactGroup(XeroObjectGroup):
+    names_raw_csv = {
+        'ContactID': 'ContactID',
+        'ContactGroups': 'ContactGroups',
+        'ContactNumber': 'ContactNumber',
+        'ContactStatus': 'ContactStatus',
+        'EmailAddress': 'EmailAddress',
+        'Name': 'Name',
+        'Address': 'Address',
+        'Phone': 'Phone',
+    }
+
+    @classmethod
+    def dump_contacts_raw_csv(cls, contacts, dump_path='contacts-raw.csv'):
+        cls.dump_items_csv(contacts.flatten_raw, dump_path, cls.names_raw_csv, 'flatten_raw')
+
+    @classmethod
+    def dump_contacts_verbose_csv(cls, contacts, dump_path='contacts-verbose.csv'):
+        names = copy(cls.names_raw_csv)
+        for key in ['Address', 'Phone']:
+            del names[key]
+        names.update({
+            'MAIN Address': 'MAIN Address',
+            'POBOX Address': 'POBOX Address',
+            'STREET Address': 'STREET Address',
+            'DELIVERY Address': 'DELIVERY Address',
+            'MAIN Phone': 'Main Phone',
+            'DEFAULT Phone': 'DEFAULT Phone',
+            'DDI Phone': 'DDI Phone',
+            'MOBILE Phone': 'MOBILE Phone',
+            'FAX Phone': 'FAX Phone',
+        })
+        cls.dump_items_csv(contacts, dump_path, names, 'flatten_verbose')
+
+    @classmethod
+    def dump_contacts_sanitized_csv(cls, contacts, dump_path='contacts-sanitized.csv'):
+        names = {
+            'Name': 'Company Name',
+            'AddressLine' : 'Address',
+            'AddressArea' : 'Area',
+            'AddressPostcode' : 'Postcode',
+            'AddressState' : 'State',
+            'AddressCountry' : 'Country',
+            'Phone' : 'Phone',
+            'EmailAddress': 'Email',
+        }
+        cls.dump_items_csv(contacts, dump_path, names, 'flatten_sanitized')
+
+    @classmethod
+    def dump_contacts_sanitized_table(cls, contacts):
+        return tabulate.tabulate(
+            [contact.flatten_sanitized() for contact in contacts],
+            headers='keys'
+        )
 
 class XeroObject(object):
     def _primary_property(self, properties, type_key, type_priority, fn_empty):
@@ -29,17 +93,6 @@ class XeroObject(object):
             _, primary_property = heapq.heappop(nonempty_properties)
             return primary_property
 
-    @classmethod
-    def dump_items_csv(cls, items, dump_path='items.csv', names=None, flatten_attr=None):
-        with open(dump_path, 'w') as dump_path:
-            writer = csv.DictWriter(dump_path, names, extrasaction='ignore')
-            writer.writeheader()
-            for item in items:
-                if flatten_attr:
-                    item = getattr(item, flatten_attr)()
-                else:
-                    item = getattr(item, '_data')
-                writer.writerow(item)
 
 class XeroContact(XeroObject):
     def __init__(self, data):
@@ -214,57 +267,3 @@ class XeroContact(XeroObject):
         ]:
             flattened[flat_key] = getattr(self, attribute)
         return flattened
-
-    names_raw_csv = {
-        'ContactID': 'ContactID',
-        'ContactGroups': 'ContactGroups',
-        'ContactNumber': 'ContactNumber',
-        'ContactStatus': 'ContactStatus',
-        'EmailAddress': 'EmailAddress',
-        'Name': 'Name',
-        'Address': 'Address',
-        'Phone': 'Phone',
-    }
-
-    @classmethod
-    def dump_contacts_raw_csv(cls, contacts, dump_path='contacts-raw.csv'):
-        cls.dump_items_csv(contacts.flatten_raw, dump_path, cls.names_raw_csv, 'flatten_raw')
-
-    @classmethod
-    def dump_contacts_verbose_csv(cls, contacts, dump_path='contacts-verbose.csv'):
-        names = copy(cls.names_raw_csv)
-        for key in ['Address', 'Phone']:
-            del names[key]
-        names.update({
-            'MAIN Address': 'MAIN Address',
-            'POBOX Address': 'POBOX Address',
-            'STREET Address': 'STREET Address',
-            'DELIVERY Address': 'DELIVERY Address',
-            'MAIN Phone': 'Main Phone',
-            'DEFAULT Phone': 'DEFAULT Phone',
-            'DDI Phone': 'DDI Phone',
-            'MOBILE Phone': 'MOBILE Phone',
-            'FAX Phone': 'FAX Phone',
-        })
-        cls.dump_items_csv(contacts, dump_path, names, 'flatten_verbose')
-
-    @classmethod
-    def dump_contacts_sanitized_csv(cls, contacts, dump_path='contacts-sanitized.csv'):
-        names = {
-            'Name': 'Company Name',
-            'AddressLine' : 'Address',
-            'AddressArea' : 'Area',
-            'AddressPostcode' : 'Postcode',
-            'AddressState' : 'State',
-            'AddressCountry' : 'Country',
-            'Phone' : 'Phone',
-            'EmailAddress': 'Email',
-        }
-        cls.dump_items_csv(contacts, dump_path, names, 'flatten_sanitized')
-
-    @classmethod
-    def dump_contacts_sanitized_table(cls, contacts):
-        return tabulate.tabulate(
-            [contact.flatten_sanitized() for contact in contacts],
-            headers='keys'
-        )
