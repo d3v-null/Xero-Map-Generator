@@ -5,13 +5,21 @@ import tempfile
 import unittest
 
 import pytest
+from six import MovedModule, add_move
 from traitlets.config.loader import Config
 
 from . import TESTS_DATA_DIR
 from ..config import load_cli_config, load_config, load_file_config
 from ..contain import XeroContact
+from ..core import dump_map_contacts, get_map_contacts
 from ..log import PKG_LOGGER, setup_logging
-from ..core import dump_map_contacts
+from ..transport import XeroApiWrapper
+
+if True:
+    add_move(MovedModule('mock', 'mock', 'unittest.mock'))
+    from six.moves import mock
+
+    from mock import patch
 
 
 @pytest.mark.usefixtures("debug")
@@ -104,7 +112,43 @@ class AbstractXMGTestCase(unittest.TestCase):
 
 class XMGCoreTestCase(AbstractXMGTestCase):
     def test_get_map_contacts(self):
-        pass
+        self.conf.FilterConfig.contact_groups = 'Test'
+        with \
+            patch.object(XeroApiWrapper, '__init__', return_value=None),\
+            patch.object(
+                XeroApiWrapper,
+                'get_contacts_in_group_names',
+                return_value=[XeroContact(self.example_api_contact)]
+            )\
+        :
+            map_contacts = get_map_contacts(self.conf)
+        self.assertEqual(len(map_contacts), 1)
+
+    def test_get_map_contacts_state_filter(self):
+        self.conf.FilterConfig.contact_groups = 'Test'
+        self.conf.FilterConfig.states = 'NSW'
+        with \
+            patch.object(XeroApiWrapper, '__init__', return_value=None),\
+            patch.object(
+                XeroApiWrapper,
+                'get_contacts_in_group_names',
+                return_value=[XeroContact(self.example_api_contact)]
+            )\
+        :
+            map_contacts = get_map_contacts(self.conf)
+        self.assertEqual(len(map_contacts), 1)
+
+        self.conf.FilterConfig.states = 'WA'
+        with \
+            patch.object(XeroApiWrapper, '__init__', return_value=None),\
+            patch.object(
+                XeroApiWrapper,
+                'get_contacts_in_group_names',
+                return_value=[XeroContact(self.example_api_contact)]
+            )\
+        :
+            map_contacts = get_map_contacts(self.conf)
+        self.assertEqual(len(map_contacts), 0)
 
     def test_dump_map_contacts(self):
         map_contacts = [

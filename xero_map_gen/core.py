@@ -10,7 +10,7 @@ from xero_map_gen.helper import expand_relative_path
 
 def get_map_contacts(conf):
     xero = XeroApiWrapper(**dict(conf.XeroApiConfig))
-    map_contact_groups = conf.FilterConfig.contact_groups.split('|')
+    map_contact_groups = conf.FilterConfig.get('contact_groups', '').split('|')
     PKG_LOGGER.debug("map contact groups: %s", map_contact_groups)
     contact_limit = conf.BaseConfig.contact_limit or None
     PKG_LOGGER.debug("contact limit: %s", contact_limit)
