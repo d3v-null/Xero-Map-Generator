@@ -1,0 +1,3 @@
+[run]
+source = xero_map_gen
+omit = xero_map_gen/tests/*
