@@ -12,13 +12,13 @@ PKG_LOGGER = logging.getLogger(PKG_NAME)
 PKG_STREAM_HANDLER = None
 PKG_FILE_HANDLER = None
 
-def setup_logging(stream_log_level=None, log_file=None, file_log_level=None):
+def setup_logging(stream_log_level=None, log_path=None, file_log_level=None, **kwargs):
     global PKG_FILE_HANDLER, PKG_STREAM_HANDLER
 
-    if log_file:
+    if log_path:
         if PKG_FILE_HANDLER:
             PKG_LOGGER.removeHandler(PKG_FILE_HANDLER)
-        PKG_FILE_HANDLER = logging.FileHandler(log_file)
+        PKG_FILE_HANDLER = logging.FileHandler(log_path)
         ROOT_LOGGER.addHandler(PKG_FILE_HANDLER)
     if file_log_level:
         PKG_FILE_HANDLER.setLevel(file_log_level)

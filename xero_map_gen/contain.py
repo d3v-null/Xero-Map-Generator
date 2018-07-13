@@ -206,9 +206,9 @@ class XeroContact(object):
 
     @classmethod
     def dump_contacts_raw_csv(cls, contacts, dump_path='contacts-raw.csv'):
-        with open(dump_path, 'w') as dump_file:
+        with open(dump_path, 'w') as dump_path:
             writer = csv.DictWriter(
-                dump_file,
+                dump_path,
                 {
                     'ContactID': 'ContactID',
                     'ContactGroups': 'ContactGroups',
@@ -227,9 +227,9 @@ class XeroContact(object):
 
     @classmethod
     def dump_contacts_verbose_csv(cls, contacts, dump_path='contacts-verbose.csv'):
-        with open(dump_path, 'w') as dump_file:
+        with open(dump_path, 'w') as dump_path:
             writer = csv.DictWriter(
-                dump_file,
+                dump_path,
                 {
                     'ContactID': 'ContactID',
                     'ContactGroups': 'ContactGroups',
@@ -255,9 +255,9 @@ class XeroContact(object):
 
     @classmethod
     def dump_contacts_sanitized_csv(cls, contacts, dump_path='contacts-sanitized.csv'):
-        with open(dump_path, 'w') as dump_file:
+        with open(dump_path, 'w') as dump_path:
             writer = csv.DictWriter(
-                dump_file,
+                dump_path,
                 {
                     'Name': 'Company Name',
                     'AddressLine' : 'Address',
