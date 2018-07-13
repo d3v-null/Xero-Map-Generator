@@ -111,16 +111,25 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
             aliases = self.aliases
         if flags is None:
             flags = self.flags
-        for key,value in aliases.items():
-            add_args = self.alias_extensions.get(key, {}).get('add_args', [])
+
+        def get_add_args_kwargs(thing_extensions, key, default_add_kwargs):
+            add_args = thing_extensions.get(key, {}).get('add_args', [])
             if not add_args:
                 add_args = ['-'+key] if len(key) is 1 else ['--'+key]
-            add_kwargs = {
+            add_kwargs = copy(default_add_kwargs)
+            add_kwargs.update(
+                thing_extensions.get(key, {}).get('add_kwargs', {})
+            )
+            return add_args, add_kwargs
+
+        for key,value in aliases.items():
+
+            default_add_kwargs = {
                 'dest': value,
                 'type': text_type
             }
-            add_kwargs.update(
-                self.alias_extensions.get(key, {}).get('add_kwargs', {})
+            add_args, add_kwargs = get_add_args_kwargs(
+                self.alias_extensions, key, default_add_kwargs
             )
             if key in flags:
                 # flags
@@ -131,17 +140,14 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
                 #
                 self.alias_flags[self.aliases[key]] = value
                 continue
-            add_args = self.flag_extensions.get(key, {}).get('add_args', [])
-            if not add_args:
-                add_args = ['-'+key] if len(key) is 1 else ['--'+key]
-            add_kwargs = {
+            default_add_kwargs = {
                 'dest': '_flags',
                 'action': 'append_const',
                 'const': value,
                 'help': help
             }
-            add_kwargs.update(
-                self.flag_extensions.get(key, {}).get('add_kwargs', {})
+            add_args, add_kwargs = get_add_args_kwargs(
+                self.flag_extensions, key, default_add_kwargs
             )
             self.parser.add_argument(*add_args, **add_kwargs)
 
