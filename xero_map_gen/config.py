@@ -157,8 +157,7 @@ def get_argparse_loader():
     )
 
 def config_quiet(config):
-    return
-    # return log_level_quiet(config.LogConfig.get('stream_log_level', logging.WARNING))
+    return log_level_quiet(config.LogConfig.get('stream_log_level', logging.WARNING))
 
 def config_runtime_exception(exc, config):
     ROOT_LOGGER.critical(exc.args[0])
@@ -167,7 +166,6 @@ def config_runtime_exception(exc, config):
             config.argparse_loader.parser.print_usage()
     exit()
 
-# def load_cli_config(argv=None, has_extra_config=None):
 def load_cli_config(argv=None, config=None):
     if config is None:
         config = Config()
@@ -248,8 +246,6 @@ def validate_config(config):
             "To connect to the Xero API, you must either specify a Xero API consumer key or a config file containing such a key"
         )
 
-
-# def load_config(argv=None, extra_config_paths=None, config_path=None):
 def load_config(argv=None, proto_config=None):
     """
     Successively merge config files from different sources, overriding the previous.
