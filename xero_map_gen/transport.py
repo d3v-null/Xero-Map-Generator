@@ -60,11 +60,9 @@ class XeroApiWrapper(Xero):
                     chunk_size = min(chunk_size, limit)
                 query_contact_ids = contact_ids[:chunk_size]
                 contact_ids = contact_ids[chunk_size:]
-                filter_query = 'ContactStatus=="ACTIVE"&&('
-                filter_query += "||".join([
+                filter_query = 'ContactStatus=="ACTIVE"&&(%s)' % "||".join([
                     'ID==Guid("%s")' % contact_id for contact_id in query_contact_ids
                 ])
-                filter_query += ")"
                 contacts_raw = self.rate_limit_retry_query('contacts', 'filter', raw=filter_query)
                 contacts.extend([
                     XeroContact(contact_raw) for contact_raw in contacts_raw
@@ -75,7 +73,32 @@ class XeroApiWrapper(Xero):
                     pbar.update(chunk_size)
         return contacts
 
-    def get_contacts_in_groups(self, names=None, contact_group_ids=None, limit=None):
+    def _get_contact_ids_in_group_ids(self, contact_group_ids=None, limit=None):
+        contact_ids = set()
+        for contact_group_id in contact_group_ids:
+            group_data = self.contactgroups.get(contact_group_id)[0]
+            PKG_LOGGER.debug("group data: %s", pprint.pformat(group_data))
+            for contact in group_data.get('Contacts', []):
+                contact_id = contact.get('ContactID')
+                if contact_id:
+                    contact_ids.add(contact_id)
+        return list(contact_ids)
+
+    def _get_contact_group_ids_from_names(self, names):
+        contact_group_ids = []
+        names_upper = [name.upper() for name in names]
+        all_groups = self.contactgroups.all()
+        PKG_LOGGER.debug("all xero contact groups: %s", pprint.pformat(all_groups))
+        for contact_group in all_groups:
+            if contact_group.get('Name', '').upper() not in names_upper:
+                continue
+            contact_group_id = contact_group.get('ContactGroupID')
+            if contact_group_id:
+                contact_group_ids.append(contact_group_id)
+        return contact_group_ids
+
+
+    def get_contacts_in_group_names(self, names=None, limit=None):
         """
         Get all contacts within the union of the contact groups specified.
 
@@ -91,25 +114,7 @@ class XeroApiWrapper(Xero):
 
         limit = limit or None
         names = names or []
-        names_upper = [name.upper() for name in names]
-        contact_group_ids = contact_group_ids or []
-        assert any([names, contact_group_ids]), "either names or contact_group_ids must be specified"
-        if not contact_group_ids:
-            all_groups = self.contactgroups.all()
-            PKG_LOGGER.debug("all xero contact groups: %s", pprint.pformat(all_groups))
-            for contact_group in all_groups:
-                if contact_group.get('Name', '').upper() not in names_upper:
-                    continue
-                contact_group_id = contact_group.get('ContactGroupID')
-                if contact_group_id:
-                    contact_group_ids.append(contact_group_id)
+        contact_group_ids = self._get_contact_group_ids_from_names(names)
         assert contact_group_ids, "unable to find contact group ID matching any of %s" % names
-        contact_ids = set()
-        for contact_group_id in contact_group_ids:
-            group_data = self.contactgroups.get(contact_group_id)[0]
-            PKG_LOGGER.debug("group data: %s", pprint.pformat(group_data))
-            for contact in group_data.get('Contacts', []):
-                contact_id = contact.get('ContactID')
-                if contact_id:
-                    contact_ids.add(contact_id)
-        return self.get_contacts_by_ids(list(contact_ids), limit)
+        contact_ids = self._get_contact_ids_in_group_ids(contact_group_ids, limit)
+        return self.get_contacts_by_ids(contact_ids, limit)

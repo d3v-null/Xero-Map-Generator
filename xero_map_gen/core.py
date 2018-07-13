@@ -14,7 +14,7 @@ def get_map_contacts(conf):
     PKG_LOGGER.debug("map contact groups: %s", map_contact_groups)
     contact_limit = conf.BaseConfig.contact_limit or None
     PKG_LOGGER.debug("contact limit: %s", contact_limit)
-    map_contacts = xero.get_contacts_in_groups(names=map_contact_groups, limit=contact_limit)
+    map_contacts = xero.get_contacts_in_group_names(names=map_contact_groups, limit=contact_limit)
     for filter_attr, contact_attr in [
         ('states', 'main_address_state'),
         ('countries', 'main_address_country'),
