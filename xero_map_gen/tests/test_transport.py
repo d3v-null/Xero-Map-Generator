@@ -22,3 +22,17 @@ class TransportTestCase(AbstractXMGTestCase):
             patch.object(XeroApiWrapper, '__init__', return_value=None)\
         :
             xero = XeroApiWrapper()
+
+    def test_get_contacts_by_ids(self):
+        with \
+            patch.object(XeroApiWrapper, '__init__', return_value=None),\
+            patch.object(
+                XeroApiWrapper,
+                'rate_limit_retry_query',
+                return_value=[self.example_api_contact]
+            )\
+        :
+            xero = XeroApiWrapper()
+            contacts = xero.get_contacts_by_ids(['fake_id'], limit=1)
+
+        self.assertEqual(len(contacts), 1)
