@@ -43,7 +43,9 @@ def get_map_contacts(conf):
 def dump_map_contacts(conf, map_contacts):
     # XeroContact.dump_contacts_raw_csv(map_contacts)
     # XeroContact.dump_contacts_verbose_csv(map_contacts)
-    dump_path = expand_relative_path(conf.BaseConfig.dump_path, conf.BaseConfig.dump_dir)
+    dump_path = conf.BaseConfig.get('dump_path')
+    if dump_path:
+        dump_path = expand_relative_path(dump_path, conf.BaseConfig.get('dump_dir'))
     XeroContact.dump_contacts_sanitized_csv(map_contacts, dump_path=dump_path)
 
     PKG_LOGGER.warning("saved %d contacts to %s" % (len(map_contacts), dump_path))

@@ -205,28 +205,51 @@ class XeroContact(object):
         return flattened
 
     @classmethod
-    def dump_contacts_raw_csv(cls, contacts, dump_path='contacts-raw.csv'):
+    def dump_contacts_csv(cls, contacts, dump_path='contacts.csv', names=None, flatten_attr=None):
         with open(dump_path, 'w') as dump_path:
-            writer = csv.DictWriter(
-                dump_path,
-                {
-                    'ContactID': 'ContactID',
-                    'ContactGroups': 'ContactGroups',
-                    'ContactNumber': 'ContactNumber',
-                    'ContactStatus': 'ContactStatus',
-                    'EmailAddress': 'EmailAddress',
-                    'Name': 'Name',
-                    'Address': 'Address',
-                    'Phone': 'Phone',
-                },
-                extrasaction='ignore'
-            )
+            writer = csv.DictWriter(dump_path, names, extrasaction='ignore')
             writer.writeheader()
             for contact in contacts:
-                writer.writerow(contact.flatten_raw())
+                if flatten_attr:
+                    contact = getattr(contact, flatten_attr)()
+                else:
+                    contact = getattr(contact, '_data')
+                writer.writerow(contact)
+
+    @classmethod
+    def dump_contacts_raw_csv(cls, contacts, dump_path='contacts-raw.csv'):
+        names = {
+            'ContactID': 'ContactID',
+            'ContactGroups': 'ContactGroups',
+            'ContactNumber': 'ContactNumber',
+            'ContactStatus': 'ContactStatus',
+            'EmailAddress': 'EmailAddress',
+            'Name': 'Name',
+            'Address': 'Address',
+            'Phone': 'Phone',
+        }
+        cls.dump_contacts_csv(contacts.flatten_raw, dump_path, names, 'flatten_raw')
 
     @classmethod
     def dump_contacts_verbose_csv(cls, contacts, dump_path='contacts-verbose.csv'):
+        names = {
+            'ContactID': 'ContactID',
+            'ContactGroups': 'ContactGroups',
+            'ContactNumber': 'ContactNumber',
+            'ContactStatus': 'ContactStatus',
+            'EmailAddress': 'EmailAddress',
+            'Name': 'Name',
+            'MAIN Address': 'MAIN Address',
+            'POBOX Address': 'POBOX Address',
+            'STREET Address': 'STREET Address',
+            'DELIVERY Address': 'DELIVERY Address',
+            'MAIN Phone': 'Main Phone',
+            'DEFAULT Phone': 'DEFAULT Phone',
+            'DDI Phone': 'DDI Phone',
+            'MOBILE Phone': 'MOBILE Phone',
+            'FAX Phone': 'FAX Phone',
+        }
+        cls.dump_contacts_csv(contacts, dump_path, names, 'flatten_verbose')
         with open(dump_path, 'w') as dump_path:
             writer = csv.DictWriter(
                 dump_path,
@@ -255,24 +278,17 @@ class XeroContact(object):
 
     @classmethod
     def dump_contacts_sanitized_csv(cls, contacts, dump_path='contacts-sanitized.csv'):
-        with open(dump_path, 'w') as dump_path:
-            writer = csv.DictWriter(
-                dump_path,
-                {
-                    'Name': 'Company Name',
-                    'AddressLine' : 'Address',
-                    'AddressArea' : 'Area',
-                    'AddressPostcode' : 'Postcode',
-                    'AddressState' : 'State',
-                    'AddressCountry' : 'Country',
-                    'Phone' : 'Phone',
-                    'EmailAddress': 'Email',
-                },
-                extrasaction='ignore'
-            )
-            writer.writeheader()
-            for contact in contacts:
-                writer.writerow(contact.flatten_sanitized())
+        names = {
+            'Name': 'Company Name',
+            'AddressLine' : 'Address',
+            'AddressArea' : 'Area',
+            'AddressPostcode' : 'Postcode',
+            'AddressState' : 'State',
+            'AddressCountry' : 'Country',
+            'Phone' : 'Phone',
+            'EmailAddress': 'Email',
+        }
+        cls.dump_contacts_csv(contacts, dump_path, names, 'flatten_sanitized')
 
     @classmethod
     def dump_contacts_sanitized_table(cls, contacts):
