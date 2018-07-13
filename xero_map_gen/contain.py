@@ -216,29 +216,27 @@ class XeroContact(object):
                     contact = getattr(contact, '_data')
                 writer.writerow(contact)
 
+    names_raw_csv = {
+        'ContactID': 'ContactID',
+        'ContactGroups': 'ContactGroups',
+        'ContactNumber': 'ContactNumber',
+        'ContactStatus': 'ContactStatus',
+        'EmailAddress': 'EmailAddress',
+        'Name': 'Name',
+        'Address': 'Address',
+        'Phone': 'Phone',
+    }
+
     @classmethod
     def dump_contacts_raw_csv(cls, contacts, dump_path='contacts-raw.csv'):
-        names = {
-            'ContactID': 'ContactID',
-            'ContactGroups': 'ContactGroups',
-            'ContactNumber': 'ContactNumber',
-            'ContactStatus': 'ContactStatus',
-            'EmailAddress': 'EmailAddress',
-            'Name': 'Name',
-            'Address': 'Address',
-            'Phone': 'Phone',
-        }
-        cls.dump_contacts_csv(contacts.flatten_raw, dump_path, names, 'flatten_raw')
+        cls.dump_contacts_csv(contacts.flatten_raw, dump_path, cls.names_raw_csv, 'flatten_raw')
 
     @classmethod
     def dump_contacts_verbose_csv(cls, contacts, dump_path='contacts-verbose.csv'):
-        names = {
-            'ContactID': 'ContactID',
-            'ContactGroups': 'ContactGroups',
-            'ContactNumber': 'ContactNumber',
-            'ContactStatus': 'ContactStatus',
-            'EmailAddress': 'EmailAddress',
-            'Name': 'Name',
+        names = copy(cls.names_raw_csv)
+        for key in ['Address', 'Phone']:
+            del names[key]
+        names.update({
             'MAIN Address': 'MAIN Address',
             'POBOX Address': 'POBOX Address',
             'STREET Address': 'STREET Address',
@@ -248,33 +246,8 @@ class XeroContact(object):
             'DDI Phone': 'DDI Phone',
             'MOBILE Phone': 'MOBILE Phone',
             'FAX Phone': 'FAX Phone',
-        }
+        })
         cls.dump_contacts_csv(contacts, dump_path, names, 'flatten_verbose')
-        with open(dump_path, 'w') as dump_path:
-            writer = csv.DictWriter(
-                dump_path,
-                {
-                    'ContactID': 'ContactID',
-                    'ContactGroups': 'ContactGroups',
-                    'ContactNumber': 'ContactNumber',
-                    'ContactStatus': 'ContactStatus',
-                    'EmailAddress': 'EmailAddress',
-                    'Name': 'Name',
-                    'MAIN Address': 'MAIN Address',
-                    'POBOX Address': 'POBOX Address',
-                    'STREET Address': 'STREET Address',
-                    'DELIVERY Address': 'DELIVERY Address',
-                    'MAIN Phone': 'Main Phone',
-                    'DEFAULT Phone': 'DEFAULT Phone',
-                    'DDI Phone': 'DDI Phone',
-                    'MOBILE Phone': 'MOBILE Phone',
-                    'FAX Phone': 'FAX Phone',
-                },
-                extrasaction='ignore'
-            )
-            writer.writeheader()
-            for contact in contacts:
-                writer.writerow(contact.flatten_verbose())
 
     @classmethod
     def dump_contacts_sanitized_csv(cls, contacts, dump_path='contacts-sanitized.csv'):
