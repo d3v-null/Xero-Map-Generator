@@ -18,66 +18,64 @@ class XeroContact(object):
         self._main_address = None
         self._main_phone = None
 
+    def _primary_property(self, properties, type_key, type_priority, fn_empty):
+        """ Abstract main_address and main_phone. """
+        if len(properties) == 0:
+            return
+        if len(properties) == 1:
+            return properties[0]
+        nonempty_properties = []
+        for property_ in properties:
+            type_ = property_.get(type_key)
+            try:
+                priority = type_priority.index(type_)
+            except ValueError:
+                priority = len(type_priority)
+            if not fn_empty(property_):
+                heapq.heappush(nonempty_properties, (priority, property_))
+        if nonempty_properties:
+            _, primary_property = heapq.heappop(nonempty_properties)
+            return primary_property
+
+    address_type_priority = [
+        'STREET', 'POBOX', 'DELIVERY'
+    ]
+
     @property
     def main_address(self):
         if getattr(self, '_main_address', None):
             return self._main_address
-        addresses = self._data.get('Addresses', [])
-        if len(addresses) == 0:
-            return
-        if len(addresses) == 1:
-            self._main_address = addresses[0]
-            return self._main_address
-        type_priority = [
-            'STREET',
-            'POBOX',
-            'DELIVERY'
-        ]
-        nonblank_addresses = []
-        blank_addresses = []
-        for address in addresses:
-            type = address.get('AddressType')
-            try:
-                priority = type_priority.index(type)
-            except ValueError:
-                priority = len(type_priority)
-            if any([
+
+        def address_empty(address):
+            return not any([
                 value for key, value in address.items() \
                 if key.startswith("AddressLine")
-            ]):
-                heapq.heappush(nonblank_addresses, (priority, address))
-                continue
-            heapq.heappush(blank_addresses, (priority, address))
-        if nonblank_addresses:
-            _, self._main_address = heapq.heappop(nonblank_addresses)
-        else:
-            _, self._main_address = heapq.heappop(blank_addresses)
+            ])
+
+        self._main_address = self._primary_property(
+            self._data.get('Addresses', []), 'AddressType',
+            self.address_type_priority, address_empty
+        )
         return self._main_address
+
+    phone_type_priority = [
+        'DEFAULT', 'DDI', 'MOBILE'
+    ]
 
     @property
     def main_phone(self):
         if getattr(self, '_main_phone', None):
             return self._main_phone
-        phones = self._data.get('Phones', [])
-        if len(phones) == 0:
-            return
-        if len(phones) == 1:
-            self._main_phone = phones[0]
-            return self._main_phone
-        type_priority = ['DEFAULT', 'DDI', 'MOBILE']
-        nonblank_phones = []
-        for phone in phones:
-            type = phone.get('PhoneType')
-            try:
-                priority = type_priority.index(type)
-            except ValueError:
-                continue
-            if phone.get('PhoneNumber'):
-                heapq.heappush(nonblank_phones, (priority, phone))
-                continue
-        if nonblank_phones:
-            _, self._main_phone = heapq.heappop(nonblank_phones)
-            return self._main_phone
+
+        def phone_empty(phone):
+            return 'PhoneNumber' not in phone
+
+        self._main_phone = self._primary_property(
+            self._data.get('Phones', []), 'PhoneType',
+            self.phone_type_priority, phone_empty
+        )
+        return self._main_phone
+
 
     @property
     def company_name(self):
