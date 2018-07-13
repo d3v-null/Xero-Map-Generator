@@ -113,36 +113,15 @@ class FilterConfig(RichConfigurable):
         switch="filter-contact-groups", metavar='"GROUP1|GROUP2"'
     )
 
-    @validate('contact_groups')
-    def _valid_contact_groups(self, proposal):
-        TraitValidation.not_falsey(
-            proposal['contact_groups'],
-            "%s.%s" % (self.__class__, 'contact_groups')
-        )
-
     states = Unicode(
         help="Filter by main address state. Separate states with '|'",
         switch="filter-states", metavar='"STATE1|STATE2"'
     )
 
-    @validate('states')
-    def _valid_states(self, proposal):
-        TraitValidation.not_falsey(
-        proposal['states'],
-        "%s.%s" % (self.__class__, 'states')
-        )
-
     countries = Unicode(
         help="Filter by main address country. Separate countries with '|'",
         switch="filter-countries", metavar='"COUNTRY1|COUNTRY2"'
     )
-
-    @validate('countries')
-    def _valid_countries(self, proposal):
-        TraitValidation.not_falsey(
-        proposal['countries'],
-        "%s.%s" % (self.__class__, 'countries')
-        )
 
 def get_argparse_loader():
     # TODO: argparse loader args
@@ -242,9 +221,6 @@ def load_file_config(config=None):
 
     file_config = Config()
     config_paths = list()
-    config_dir = None
-    if 'config_dir' in config.BaseConfig:
-        config_dir = config.BaseConfig.config_dir
 
     def maybe_add_config_path(config_path):
         config_path = validate_config_path(config_path, config)
