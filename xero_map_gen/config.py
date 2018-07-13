@@ -31,7 +31,7 @@ from traitlets.config.loader import (ArgumentError, Config, ConfigFileNotFound,
 
 from . import DESCRIPTION, PKG_NAME
 from .helper import TraitValidation, expand_relative_path
-from .log import PKG_LOGGER, ROOT_LOGGER, log_level_quiet, setup_logging, LogConfig
+from .log import PKG_LOGGER, ROOT_LOGGER, log_level_quiet, setup_logging
 from .rich_traitlets import RichConfigurable, RichKVArgParseConfigLoader, RichConfig
 
 class ConfigException(UserWarning):
