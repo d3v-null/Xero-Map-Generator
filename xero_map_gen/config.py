@@ -161,9 +161,8 @@ def config_quiet(config):
 
 def config_runtime_exception(exc, config):
     ROOT_LOGGER.critical(exc.args[0])
-    if not config_quiet(config):
-        if 'argparse_loader' in config:
-            config.argparse_loader.parser.print_usage()
+    if not config_quiet(config) and 'argparse_loader' in config:
+        config.argparse_loader.parser.print_usage()
     exit()
 
 def load_cli_config(argv=None, config=None):

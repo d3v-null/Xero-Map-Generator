@@ -41,9 +41,8 @@ def setup_logging(stream_log_level=None, log_path=None, file_log_level=None, **k
 def log_level_value(log_level):
     if isinstance(log_level, integer_types):
         return log_level
-    if isinstance(log_level, string_types):
-        if hasattr(logging, log_level):
-            return getattr(logging, log_level)
+    if isinstance(log_level, string_types) and hasattr(logging, log_level):
+        return getattr(logging, log_level)
 
 def log_level_quiet(log_level):
     return log_level_value(log_level) > logging.WARNING
