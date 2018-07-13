@@ -50,8 +50,8 @@ class XeroContact(object):
             heapq.heappush(blank_addresses, (priority, address))
         if nonblank_addresses:
             _, self._main_address = heapq.heappop(nonblank_addresses)
-            return self._main_address
-        _, self._main_address = heapq.heappop(blank_addresses)
+        else:
+            _, self._main_address = heapq.heappop(blank_addresses)
         return self._main_address
 
     @property

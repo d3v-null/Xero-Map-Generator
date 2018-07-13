@@ -82,25 +82,24 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
             }
             ```
         """
-        self.alias_extensions = {}
-        if aliases:
-            super_aliases = {}
-            for alias, values in aliases.items():
-                assert 'trait' in values, "alias values must contain a trait"
-                super_aliases[alias] = values.pop('trait')
+        def process_super_extensions(things, name_singular, value_key):
+            setattr(self, "%s_extensions" % name_singular, {})
+            if not things:
+                return
+            super_things = {}
+            for thing, values in things.items():
+                assert value_key in values, "%s values must contain a %s" % (
+                    name_singular, value_key
+                )
+                super_things[thing] = values.pop(value_key)
                 if values:
-                    self.alias_extensions[alias] = values
-            super_kwargs.update(aliases=super_aliases)
+                    getattr(self, "%s_extensions" % name_singular)[thing] = values
+            return super_things
 
-        self.flag_extensions = {}
-        if flags:
-            super_flags = {}
-            for flag, values in flags.items():
-                assert 'value' in values, "flag value dict must contain a value"
-                super_flags[flag] = values.pop('value')
-                if values:
-                    self.flag_extensions[alias] = values
-            super_kwargs.update(flags=super_flags)
+        super_kwargs.update(
+            aliases=process_super_extensions(aliases, 'alias', 'trait'),
+            flags=process_super_extensions(flags, 'flag', 'value')
+        )
 
         super().__init__(*super_args, **super_kwargs)
 
