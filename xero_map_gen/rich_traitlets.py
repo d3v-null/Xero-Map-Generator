@@ -9,6 +9,7 @@ from traitlets.config.loader import (ArgumentError, Config, ConfigFileNotFound,
                                      JSONFileConfigLoader,
                                      KVArgParseConfigLoader, LazyConfigValue,
                                      PyFileConfigLoader)
+from builtins import super
 
 class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
     """ Extension of KVArgParseConfigLoader to handle complex argument parsing. """
