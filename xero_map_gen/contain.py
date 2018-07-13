@@ -9,15 +9,7 @@ import tabulate
 class XeroContactGroup(object):
     pass
 
-class XeroContact(object):
-    def __init__(self, data):
-        self.update_data(data)
-
-    def update_data(self, data):
-        self._data = data
-        self._main_address = None
-        self._main_phone = None
-
+class XeroObject(object):
     def _primary_property(self, properties, type_key, type_priority, fn_empty):
         """ Abstract main_address and main_phone. """
         if len(properties) == 0:
@@ -36,6 +28,27 @@ class XeroContact(object):
         if nonempty_properties:
             _, primary_property = heapq.heappop(nonempty_properties)
             return primary_property
+
+    @classmethod
+    def dump_items_csv(cls, items, dump_path='items.csv', names=None, flatten_attr=None):
+        with open(dump_path, 'w') as dump_path:
+            writer = csv.DictWriter(dump_path, names, extrasaction='ignore')
+            writer.writeheader()
+            for item in items:
+                if flatten_attr:
+                    item = getattr(item, flatten_attr)()
+                else:
+                    item = getattr(item, '_data')
+                writer.writerow(item)
+
+class XeroContact(XeroObject):
+    def __init__(self, data):
+        self.update_data(data)
+
+    def update_data(self, data):
+        self._data = data
+        self._main_address = None
+        self._main_phone = None
 
     address_type_priority = [
         'STREET', 'POBOX', 'DELIVERY'
@@ -161,18 +174,18 @@ class XeroContact(object):
             'ContactStatus', 'EmailAddress', 'Name'
         ]:
             flattened[key] = self._data.get(key)
-        for address in self._data['Addresses']:
-            address = copy(address)
-            type = address.pop('AddressType', 'POBOX')
-            key = '%s Address' % type
-            assert key not in flattened, "duplicate key being added"
-            flattened[key] = address
-        for phone in self._data['Phones']:
-            phone = copy(phone)
-            type = phone.pop('PhoneType', 'DEFAULT')
-            key = '%s Phone' % type
-            assert key not in flattened, "duplicate key being added"
-            flattened[key] = phone
+        for data_key, data_type, type_default in [
+            ('Addresses', 'Address', 'POBOX'),
+            ('Phones', 'Phone', 'DEFAULT'),
+        ]:
+            type_key = '%sType' % data_type
+            for property_ in self._data[data_key]:
+                property_ = copy(property_)
+                property_type = property_.pop(type_key, type_default)
+                flat_key = '%s %s' % (data_type, property_type)
+                assert flat_key not in flattened, "duplicate key %s being added to flat" % flat_key
+                flattened[flat_key] = property_
+
         return flattened
 
     def flatten_verbose(self):
@@ -202,18 +215,6 @@ class XeroContact(object):
             flattened[flat_key] = getattr(self, attribute)
         return flattened
 
-    @classmethod
-    def dump_contacts_csv(cls, contacts, dump_path='contacts.csv', names=None, flatten_attr=None):
-        with open(dump_path, 'w') as dump_path:
-            writer = csv.DictWriter(dump_path, names, extrasaction='ignore')
-            writer.writeheader()
-            for contact in contacts:
-                if flatten_attr:
-                    contact = getattr(contact, flatten_attr)()
-                else:
-                    contact = getattr(contact, '_data')
-                writer.writerow(contact)
-
     names_raw_csv = {
         'ContactID': 'ContactID',
         'ContactGroups': 'ContactGroups',
@@ -227,7 +228,7 @@ class XeroContact(object):
 
     @classmethod
     def dump_contacts_raw_csv(cls, contacts, dump_path='contacts-raw.csv'):
-        cls.dump_contacts_csv(contacts.flatten_raw, dump_path, cls.names_raw_csv, 'flatten_raw')
+        cls.dump_items_csv(contacts.flatten_raw, dump_path, cls.names_raw_csv, 'flatten_raw')
 
     @classmethod
     def dump_contacts_verbose_csv(cls, contacts, dump_path='contacts-verbose.csv'):
@@ -245,7 +246,7 @@ class XeroContact(object):
             'MOBILE Phone': 'MOBILE Phone',
             'FAX Phone': 'FAX Phone',
         })
-        cls.dump_contacts_csv(contacts, dump_path, names, 'flatten_verbose')
+        cls.dump_items_csv(contacts, dump_path, names, 'flatten_verbose')
 
     @classmethod
     def dump_contacts_sanitized_csv(cls, contacts, dump_path='contacts-sanitized.csv'):
@@ -259,7 +260,7 @@ class XeroContact(object):
             'Phone' : 'Phone',
             'EmailAddress': 'Email',
         }
-        cls.dump_contacts_csv(contacts, dump_path, names, 'flatten_sanitized')
+        cls.dump_items_csv(contacts, dump_path, names, 'flatten_sanitized')
 
     @classmethod
     def dump_contacts_sanitized_table(cls, contacts):
