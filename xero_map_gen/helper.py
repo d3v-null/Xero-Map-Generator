@@ -27,3 +27,14 @@ class TraitValidation(object):
             raise TraitError('value %sis empty' % (
                 (" %s" % name) if name else "")
             )
+
+def expand_relative_path(path, dir):
+    path = os.path.expandvars(path)
+    path = os.path.normpath(path)
+    path = os.path.expanduser(path)
+    if not path.startswith('/') and dir:
+        dir = os.path.expandvars(dir)
+        dir = os.path.normpath(dir)
+        dir = os.path.expanduser(dir)
+        path = os.path.join(dir, path)
+    return os.path.abspath(path)

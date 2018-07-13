@@ -1,6 +1,7 @@
 import datetime
 import os
 import shlex
+import tempfile
 import unittest
 
 import pytest
@@ -10,6 +11,7 @@ from . import TESTS_DATA_DIR
 from ..config import load_cli_config, load_config, load_file_config
 from ..contain import XeroContact
 from ..log import PKG_LOGGER, setup_logging
+from ..core import dump_map_contacts
 
 
 @pytest.mark.usefixtures("debug")
@@ -108,3 +110,9 @@ class XMGCoreTestCase(AbstractXMGTestCase):
         map_contacts = [
             XeroContact(self.example_api_contact)
         ]
+
+        tmp_dump_dir = tempfile.mkdtemp(self.id())
+        self.conf.BaseConfig.dump_dir = tmp_dump_dir
+        dump_map_contacts(self.conf, map_contacts)
+        dump_dir_contents = os.listdir(tmp_dump_dir)
+        self.assertEqual(len(dump_dir_contents), 1)

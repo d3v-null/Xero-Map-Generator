@@ -30,7 +30,7 @@ from traitlets.config.loader import (ArgumentError, Config, ConfigFileNotFound,
                                      PyFileConfigLoader)
 
 from . import DESCRIPTION, PKG_NAME
-from .helper import TraitValidation
+from .helper import TraitValidation, expand_relative_path
 from .log import PKG_LOGGER, ROOT_LOGGER, log_level_quiet, setup_logging
 
 
@@ -361,18 +361,6 @@ def load_single_file_config(config_path, config):
     loader = loader_class(config_path, path=config_path)
     return loader.load_config()
 
-# TODO: move to helpers
-def expand_relative_path(path, dir):
-    path = os.path.expandvars(path)
-    path = os.path.normpath(path)
-    path = os.path.expanduser(path)
-    if not path.startswith('/') and dir:
-        dir = os.path.expandvars(dir)
-        dir = os.path.normpath(dir)
-        dir = os.path.expanduser(dir)
-        path = os.path.join(dir, path)
-    return os.path.abspath(path)
-
 def validate_config_path(config_path, config=None):
     """
     Return an expanded config path relative to config_dir if provided in config.BaseConfig
@@ -444,12 +432,20 @@ def load_config(argv=None, proto_config=None):
     config.merge_source('proto', proto_config)
     setup_logging(**config.LogConfig)
     cli_config = load_cli_config(argv, config)
-    if 'config_path' in cli_config.BaseConfig:
-        config.BaseConfig.config_path = cli_config.BaseConfig.config_path
-    if 'config_dir' in cli_config.BaseConfig:
-        config.BaseConfig.config_dir = cli_config.BaseConfig.config_dir
-    if 'stream_log_level' in cli_config.LogConfig:
-        config.LogConfig.stream_log_level = cli_config.LogConfig.stream_log_level
+    for trait, group in [
+        ('config_path', 'BaseConfig'),
+        ('config_dir', 'BaseConfig'),
+        ('stream_log_level', 'LogConfig')
+    ]:
+        if trait in getattr(cli_config, group):
+            setattr(
+                getattr(config, group), trait,
+                getattr(getattr(cli_config, group), trait)
+            )
+    # if 'config_dir' in cli_config.BaseConfig:
+    #     config.BaseConfig.config_dir = cli_config.BaseConfig.config_dir
+    # if 'stream_log_level' in cli_config.LogConfig:
+    #     config.LogConfig.stream_log_level = cli_config.LogConfig.stream_log_level
     # TODO: replace this wiht custom traitlet subclass "immediate" where settings are applied as soon as they are loaded
     # TODO: implement partial merge like this
     # config.partial_merge(

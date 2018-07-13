@@ -6,6 +6,7 @@ from xero_map_gen.config import load_config
 from xero_map_gen.transport import XeroApiWrapper
 from xero_map_gen.log import setup_logging, PKG_LOGGER
 from xero_map_gen.contain import XeroContact
+from xero_map_gen.helper import expand_relative_path
 
 def get_map_contacts(conf):
     xero = XeroApiWrapper(**dict(conf.XeroApiConfig))
@@ -42,9 +43,10 @@ def get_map_contacts(conf):
 def dump_map_contacts(conf, map_contacts):
     # XeroContact.dump_contacts_raw_csv(map_contacts)
     # XeroContact.dump_contacts_verbose_csv(map_contacts)
-    XeroContact.dump_contacts_sanitized_csv(map_contacts, dump_path=conf.BaseConfig.dump_path)
+    dump_path = expand_relative_path(conf.BaseConfig.dump_path, conf.BaseConfig.dump_dir)
+    XeroContact.dump_contacts_sanitized_csv(map_contacts, dump_path=dump_path)
 
-    PKG_LOGGER.warning("saved %d contacts to %s" % (len(map_contacts), conf.BaseConfig.dump_path))
+    PKG_LOGGER.warning("saved %d contacts to %s" % (len(map_contacts), dump_path))
 
 def main(argv=None):
     """ main. """
