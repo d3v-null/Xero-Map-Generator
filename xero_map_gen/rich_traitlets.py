@@ -77,38 +77,31 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
 
         super().__init__(*super_args, **super_kwargs)
 
-    def _add_arguments(self, aliases=None, flags=None):
-        """ Override _add_arguments with alias and flag extensions. """
-        self.alias_flags = {}
-        # print aliases, flags
-        if aliases is None:
-            aliases = self.aliases
-        if flags is None:
-            flags = self.flags
+    def _get_add_args_kwargs(self, thing_extensions, key, default_add_kwargs):
+        add_args = thing_extensions.get(key, {}).get('add_args', [])
+        if not add_args:
+            add_args = ['-'+key] if len(key) is 1 else ['--'+key]
+        add_kwargs = copy(default_add_kwargs)
+        add_kwargs.update(
+            thing_extensions.get(key, {}).get('add_kwargs', {})
+        )
+        return add_args, add_kwargs
 
-        def get_add_args_kwargs(thing_extensions, key, default_add_kwargs):
-            add_args = thing_extensions.get(key, {}).get('add_args', [])
-            if not add_args:
-                add_args = ['-'+key] if len(key) is 1 else ['--'+key]
-            add_kwargs = copy(default_add_kwargs)
-            add_kwargs.update(
-                thing_extensions.get(key, {}).get('add_kwargs', {})
-            )
-            return add_args, add_kwargs
-
+    def _add_alias_arguments(self, aliases, flags):
         for key,value in aliases.items():
-
             default_add_kwargs = {
                 'dest': value,
                 'type': text_type
             }
-            add_args, add_kwargs = get_add_args_kwargs(
+            add_args, add_kwargs = self._get_add_args_kwargs(
                 self.alias_extensions, key, default_add_kwargs
             )
             if key in flags:
                 # flags
                 add_kwargs['nargs'] = '?'
             self.parser.add_argument(*add_args, **add_kwargs)
+
+    def _add_flag_arguments(self, flags):
         for key, (value, help) in flags.items():
             if key in self.aliases:
                 #
@@ -120,10 +113,22 @@ class RichKVArgParseConfigLoader(KVArgParseConfigLoader):
                 'const': value,
                 'help': help
             }
-            add_args, add_kwargs = get_add_args_kwargs(
+            add_args, add_kwargs = self._get_add_args_kwargs(
                 self.flag_extensions, key, default_add_kwargs
             )
             self.parser.add_argument(*add_args, **add_kwargs)
+
+    def _add_arguments(self, aliases=None, flags=None):
+        """ Override _add_arguments with alias and flag extensions. """
+        self.alias_flags = {}
+
+        if aliases is None:
+            aliases = self.aliases
+        if flags is None:
+            flags = self.flags
+        self._add_alias_arguments(aliases, flags)
+        self._add_flag_arguments(flags)
+
 
 class RichConfigurable(Configurable):
     # TODO: extra methods for auto generating add_args
