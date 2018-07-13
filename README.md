@@ -2,6 +2,7 @@
 Generates a Google Maps import file from a Contact Group in Xero
 
 [![Build Status](https://travis-ci.org/derwentx/Xero-Map-Generator.svg?branch=master)](https://travis-ci.org/derwentx/Xero-Map-Generator)
+[![Maintainability](https://api.codeclimate.com/v1/badges/8fde8d3562484457ae4b/maintainability)](https://codeclimate.com/github/derwentx/Xero-Map-Generator/maintainability)
 [![Say thanks icon](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/derwentx)
 
 

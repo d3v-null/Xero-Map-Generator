@@ -104,3 +104,4 @@ venv.bak/
 .mypy_cache/
 contacts.csv
 *.csv
+cc-test-reporter
