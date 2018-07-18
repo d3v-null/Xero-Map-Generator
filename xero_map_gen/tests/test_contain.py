@@ -3,11 +3,13 @@ Test container functionality.
 """
 
 import unittest
+import os
 
 import pytest
+import tempfile
 
 from .test_core import AbstractXMGTestCase
-from ..contain import XeroContact
+from ..contain import XeroContact, XeroContactGroup
 
 
 class ContainTestCase(AbstractXMGTestCase):
@@ -129,3 +131,18 @@ class XeroContactTestCase(ContainTestCase):
             }
             contact = XeroContact(api_data)
             self.assertEqual(contact.main_phone, phones[1])
+
+    def test_dump_items_csv_unicode(self):
+        tmp_dump_dir = tempfile.mkdtemp(self.id())
+        items = [
+            {'AddressPostcode': u'1234', 'Name': u'Lil\u2019 Unicode', 'AddressState': u'SA', 'AddressCountry': 'Australia', 'Phone': u'08 1234 5678', 'ContactID': u'f7b94e73-6846-4cc1-a91a-05aff537bf9e', 'EmailAddress': u'blah@bigpond.com', 'AddressArea': u'Unicodeland', 'AddressLine': u'51 Derp Street'}
+        ]
+        dump_path = os.path.join(tmp_dump_dir, 'items.csv')
+        XeroContactGroup.dump_items_csv(
+            items,
+            dump_path=dump_path,
+            names=XeroContactGroup.names_sanitized_csv
+        )
+
+        dump_dir_contents = os.listdir(tmp_dump_dir)
+        self.assertEqual(len(dump_dir_contents), 1)

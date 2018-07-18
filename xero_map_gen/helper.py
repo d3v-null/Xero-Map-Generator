@@ -1,8 +1,10 @@
-from copy import copy
 import csv
 import os
+from copy import copy
 
 from traitlets import TraitError
+
+from six import b, binary_type, byte2int, iterbytes, text_type, u, unichr
 
 
 class TraitValidation(object):
@@ -38,3 +40,19 @@ def expand_relative_path(path, dir):
         dir = os.path.expanduser(dir)
         path = os.path.join(dir, path)
     return os.path.abspath(path)
+
+class SanitationUtils(object):
+    @classmethod
+    def to_ascii(cls, thing, errors=None):
+        """Take a stringable object of any type, returns a safe ASCII byte str."""
+        if errors is None:
+            errors = 'backslashreplace'
+        if isinstance(thing, binary_type):
+            thing = u"".join([
+                (unichr(c) if (c in range(0x7f)) else "\\x%02x" % (c,))\
+                for c in iterbytes(thing)
+            ])
+            # thing = thing.decode('ascii', errors=errors)
+        elif not isinstance(thing, text_type):
+            thing = text_type(thing)
+        return thing.encode('ascii', errors=errors).decode('ascii')

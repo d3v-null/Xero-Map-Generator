@@ -1,9 +1,13 @@
 """ Container classes and utilities for containing data. """
 
+import csv
 import heapq
 from copy import copy
-import csv
+
 import tabulate
+
+from .helper import SanitationUtils
+
 
 class XeroObjectGroup(object):
     @classmethod
@@ -14,8 +18,14 @@ class XeroObjectGroup(object):
             for item in items:
                 if flatten_attr:
                     item = getattr(item, flatten_attr)()
-                else:
+                elif hasattr(item, '_data'):
                     item = getattr(item, '_data')
+                item = dict([
+                    (
+                        SanitationUtils.to_ascii(key, errors='ignore'),
+                        SanitationUtils.to_ascii(value, errors='ignore')
+                    ) for key, value in item.items()
+                ])
                 writer.writerow(item)
 
 class XeroContactGroup(XeroObjectGroup):
@@ -52,18 +62,20 @@ class XeroContactGroup(XeroObjectGroup):
         })
         cls.dump_items_csv(contacts, dump_path, names, 'flatten_verbose')
 
+    names_sanitized_csv = {
+        'Name': 'Company Name',
+        'AddressLine' : 'Address',
+        'AddressArea' : 'Area',
+        'AddressPostcode' : 'Postcode',
+        'AddressState' : 'State',
+        'AddressCountry' : 'Country',
+        'Phone' : 'Phone',
+        'EmailAddress': 'Email',
+    }
+
     @classmethod
     def dump_contacts_sanitized_csv(cls, contacts, dump_path='contacts-sanitized.csv'):
-        names = {
-            'Name': 'Company Name',
-            'AddressLine' : 'Address',
-            'AddressArea' : 'Area',
-            'AddressPostcode' : 'Postcode',
-            'AddressState' : 'State',
-            'AddressCountry' : 'Country',
-            'Phone' : 'Phone',
-            'EmailAddress': 'Email',
-        }
+        names = copy(cls.names_sanitized_csv)
         cls.dump_items_csv(contacts, dump_path, names, 'flatten_sanitized')
 
     @classmethod
