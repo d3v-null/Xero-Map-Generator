@@ -160,6 +160,7 @@ def config_quiet(config):
     return log_level_quiet(config.LogConfig.get('stream_log_level', logging.WARNING))
 
 def config_runtime_exception(exc, config):
+    print(exc.args[0])
     ROOT_LOGGER.critical(exc.args[0])
     if not config_quiet(config) and 'argparse_loader' in config:
         config.argparse_loader.parser.print_usage()
