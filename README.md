@@ -5,6 +5,14 @@ Generates a Google Maps import file from a Contact Group in Xero
 [![Maintainability](https://api.codeclimate.com/v1/badges/8fde8d3562484457ae4b/maintainability)](https://codeclimate.com/github/derwentx/Xero-Map-Generator/maintainability)
 [![Say thanks icon](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/derwentx)
 
+```
+        _  __    __  ___   ______
+       | |/ /   /  |/  /  / ____/
+       |   /   / /|_/ /  / / __
+      /   |   / /  / /  / /_/ /
+     /_/|_|  /_/  /_/   \____/
+
+```
 
 ## Usage
 
@@ -20,14 +28,15 @@ cat > ~/.credentials/xmg_config.json << EOF
 EOF
 ```
 
-## Examples
+Create a script if you are generating multiple csv files like so
 
 ```
-xero_map_gen --filter-contact-groups 'Gordon Cohen Agencies|Joli Agencies|KAS Agencies' --filter-states 'NSW|ACT' --dump-file "stockists_nsw_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
-xero_map_gen --filter-contact-groups 'Joli Agencies'  --filter-states 'QLD' --dump-file "stockists_qld_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
-xero_map_gen --filter-contact-groups 'Louise Cargill' --dump-file "stockists_vic_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
-xero_map_gen --filter-contact-groups 'Jenny Atkins' --dump-file "stockists_sa_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
-xero_map_gen --filter-contact-groups 'Direct' --filter-states 'TAS' --dump-file "stockists_tas_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
-xero_map_gen --filter-contact-groups 'Direct' --filter-states 'WA' --dump-file "stockists_wa_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
-xero_map_gen --filter-contact-groups 'Direct' --filter-states 'NT' --dump-file "stockists_nt_$(date +'%Y-%m-%d').csv" --config-file ~/.credentials/xmg_config.json
+xero_map_gen --filter-contact-groups 'ACME Agencies|Joli Agencies|KAS Agencies' --filter-states 'NSW|ACT' --dump-path "stockists_nsw_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
+xero_map_gen --filter-contact-groups 'Foo Agencies'  --filter-states 'QLD' --dump-path "stockists_qld_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
+xero_map_gen --filter-contact-groups 'Bar Agencies' --dump-path "stockists_vic_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
+xero_map_gen --filter-contact-groups 'Foobar Agencies' --dump-path "stockists_sa_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
+xero_map_gen --filter-contact-groups 'Direct' --filter-states 'TAS' --dump-path "stockists_tas_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
+xero_map_gen --filter-contact-groups 'Direct' --filter-states 'WA' --dump-path "stockists_wa_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
+xero_map_gen --filter-contact-groups 'Direct' --filter-states 'NT' --dump-path "stockists_nt_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json
+read -p "Maps Succesfully Generated, press enter to continue"
 ```
