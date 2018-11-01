@@ -9,11 +9,11 @@ from six import MovedModule, add_move
 from traitlets.config.loader import Config
 
 from . import TESTS_DATA_DIR
-from ..config import load_cli_config, load_config, load_file_config
-from ..contain import XeroContact
-from ..core import dump_map_contacts, get_map_contacts
-from ..log import PKG_LOGGER, setup_logging
-from ..transport import XeroApiWrapper
+from xero_map_gen.config import load_cli_config, load_config, load_file_config
+from xero_map_gen.contain import XeroContact
+from xero_map_gen.core import dump_map_contacts, get_map_contacts
+from xero_map_gen.log import PKG_LOGGER, setup_logging
+from xero_map_gen.transport import XeroApiWrapper
 
 if True:
     add_move(MovedModule('mock', 'mock', 'unittest.mock'))

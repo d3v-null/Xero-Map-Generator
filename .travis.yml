@@ -1,6 +1,7 @@
 env:
     global:
-        - CC_TEST_REPORTER_ID=71a450fd96afcf2c41be011dce36e5b02ef6c85066d068f9819dd0ee6e8e168d
+        - CC_TEST_REPORTER_ID: 71a450fd96afcf2c41be011dce36e5b02ef6c85066d068f9819dd0ee6e8e168d
+        - CODECOV_TOKEN: 50ca637f-5791-423c-98cb-c817550a1636
 language: python
 python:
     - "2.7"
@@ -19,3 +20,4 @@ after_script:
     - coverage report -m
     - coverage xml
     - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT --debug
+    - codecov

@@ -7,7 +7,7 @@ import unittest
 import pytest
 from six import MovedModule, add_move
 
-from ..transport import XeroApiWrapper
+from xero_map_gen.transport import XeroApiWrapper
 from .test_core import AbstractXMGTestCase
 
 if True:

@@ -9,7 +9,7 @@ import pytest
 import tempfile
 
 from .test_core import AbstractXMGTestCase
-from ..contain import XeroContact, XeroContactGroup
+from xero_map_gen.contain import XeroContact, XeroContactGroup
 
 
 class ContainTestCase(AbstractXMGTestCase):
