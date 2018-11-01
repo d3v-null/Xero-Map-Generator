@@ -18,7 +18,7 @@ Generates a Google Maps import file from a Contact Group in Xero
 
 ## Coverage
 
-[!codecoverage xml](https://codecov.io/gh/derwentx/Xero-Map-Generator/branch/master/graphs/sunburst.svg)
+![codecoverage xml](https://codecov.io/gh/derwentx/Xero-Map-Generator/branch/master/graphs/sunburst.svg)
 
 ## Usage
 
