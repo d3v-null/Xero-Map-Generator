@@ -151,3 +151,43 @@ class XeroContactTestCase(ContainTestCase):
 
         dump_dir_contents = os.listdir(tmp_dump_dir)
         self.assertEqual(len(dump_dir_contents), 1)
+
+    def test_xero_contact_flatten_raw(self):
+        contact = XeroContact(self.example_api_contact)
+        flattened_raw = contact.flatten_raw()
+        expected = {
+            'ContactID': 'a3e4631c-c02d-461d-a5ec-641c5aaace1f',
+            'ContactGroups': [{
+                'ContactGroupID': '4f935b4a-9406-41c0-ba45-b36b67c0123e',
+                'Contacts': [], 'HasValidationErrors': False,
+                'Name': 'ACME Agencies',
+                'Status': 'ACTIVE'
+            }],
+            'ContactNumber': '', 'ContactStatus': 'ACTIVE',
+            'EmailAddress': 'grohlfing0@reddit.com', 'Name': 'Eare Pharmacy',
+            'Address STREET': {
+                'AttentionTo': '', 'City': '', 'Country': '', 'PostalCode': '',
+                'Region': ''
+            },
+            'Address POBOX': {
+                'AddressLine1': '9571 Mariners Cove Place', 'AddressLine2': '',
+                'AddressLine3': '', 'AddressLine4': '',
+                'AttentionTo': 'John Smith', 'City': 'Sydney', 'Country': 'AU',
+                'PostalCode': '1033', 'Region': 'NSW'
+            },
+            'Phone DDI': {
+                'PhoneAreaCode': '', 'PhoneCountryCode': '', 'PhoneNumber': ''
+            },
+            'Phone DEFAULT': {
+                'PhoneAreaCode': '02', 'PhoneCountryCode': '',
+                'PhoneNumber': '68891038'
+            },
+            'Phone FAX': {
+                'PhoneAreaCode': '02', 'PhoneCountryCode': '',
+                'PhoneNumber': '68892299'
+            },
+            'Phone MOBILE': {
+                'PhoneAreaCode': '', 'PhoneCountryCode': '', 'PhoneNumber': ''
+            }
+        }
+        self.assertEqual(flattened_raw, expected)
