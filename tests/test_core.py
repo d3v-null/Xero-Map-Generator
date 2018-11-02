@@ -118,9 +118,7 @@ class AbstractXMGTestCase(unittest.TestCase):
 class XMGCoreTestCase(AbstractXMGTestCase):
     def test_get_map_contacts(self):
         self.conf.FilterConfig.contact_groups = 'Test'
-        with \
-            patch.object(XeroApiWrapper, '__init__', return_value=None),\
-            patch.object(
+        with patch.object(
                 XeroApiWrapper,
                 'get_contacts_in_group_names',
                 return_value=[XeroContact(self.example_api_contact)]
@@ -132,9 +130,7 @@ class XMGCoreTestCase(AbstractXMGTestCase):
     def test_get_map_contacts_state_filter(self):
         self.conf.FilterConfig.contact_groups = 'Test'
         self.conf.FilterConfig.states = 'NSW'
-        with \
-            patch.object(XeroApiWrapper, '__init__', return_value=None),\
-            patch.object(
+        with patch.object(
                 XeroApiWrapper,
                 'get_contacts_in_group_names',
                 return_value=[XeroContact(self.example_api_contact)]
@@ -144,9 +140,7 @@ class XMGCoreTestCase(AbstractXMGTestCase):
         self.assertEqual(len(map_contacts), 1)
 
         self.conf.FilterConfig.states = 'WA|VIC'
-        with \
-            patch.object(XeroApiWrapper, '__init__', return_value=None),\
-            patch.object(
+        with patch.object(
                 XeroApiWrapper,
                 'get_contacts_in_group_names',
                 return_value=[XeroContact(self.example_api_contact)]
@@ -158,9 +152,7 @@ class XMGCoreTestCase(AbstractXMGTestCase):
     def test_get_map_contacts_country_filter(self):
         self.conf.FilterConfig.contact_groups = 'Test'
         self.conf.FilterConfig.countries = 'Australia'
-        with \
-            patch.object(XeroApiWrapper, '__init__', return_value=None),\
-            patch.object(
+        with patch.object(
                 XeroApiWrapper,
                 'get_contacts_in_group_names',
                 return_value=[XeroContact(self.example_api_contact)]
@@ -170,9 +162,7 @@ class XMGCoreTestCase(AbstractXMGTestCase):
         self.assertEqual(len(map_contacts), 1)
 
         self.conf.FilterConfig.countries = 'USA'
-        with \
-            patch.object(XeroApiWrapper, '__init__', return_value=None),\
-            patch.object(
+        with patch.object(
                 XeroApiWrapper,
                 'get_contacts_in_group_names',
                 return_value=[XeroContact(self.example_api_contact)]
