@@ -108,10 +108,15 @@ class XeroObject(object):
 
 class XeroContact(XeroObject):
     def __init__(self, data):
-        self.update_data(data)
+        self.data = data
 
-    def update_data(self, data):
-        self._data = data
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, value):
+        self._data = value
         self._main_address = None
         self._main_phone = None
 
@@ -131,7 +136,7 @@ class XeroContact(XeroObject):
             ])
 
         self._main_address = self._primary_property(
-            self._data.get('Addresses', []), 'AddressType',
+            self.data.get('Addresses', []), 'AddressType',
             self.address_type_priority, address_empty
         )
         return self._main_address
@@ -149,7 +154,7 @@ class XeroContact(XeroObject):
             return 'PhoneNumber' not in phone
 
         self._main_phone = self._primary_property(
-            self._data.get('Phones', []), 'PhoneType',
+            self.data.get('Phones', []), 'PhoneType',
             self.phone_type_priority, phone_empty
         )
         return self._main_phone
@@ -157,8 +162,8 @@ class XeroContact(XeroObject):
 
     @property
     def company_name(self):
-        if 'Name' in self._data and self._data.get('Name') :
-            return self._data['Name']
+        if 'Name' in self.data and self.data.get('Name') :
+            return self.data['Name']
 
     @property
     def main_address_lines(self):
@@ -236,15 +241,15 @@ class XeroContact(XeroObject):
 
     @property
     def archived(self):
-        return self._data.get('ContactStatus') == 'ARCHIVED'
+        return self.data.get('ContactStatus') == 'ARCHIVED'
 
     @property
     def active(self):
-        return self._data.get('ContactStatus') == 'ACTIVE'
+        return self.data.get('ContactStatus') == 'ACTIVE'
 
     @property
     def contact_id(self):
-        return self._data.get('ContactID')
+        return self.data.get('ContactID')
 
     def flatten_raw(self):
         flattened = dict()
@@ -252,13 +257,13 @@ class XeroContact(XeroObject):
             'ContactID', 'ContactGroups', 'ContactNumber',
             'ContactStatus', 'EmailAddress', 'Name'
         ]:
-            flattened[key] = self._data.get(key)
+            flattened[key] = self.data.get(key)
         for data_key, data_type, type_default in [
             ('Addresses', 'Address', 'POBOX'),
             ('Phones', 'Phone', 'DEFAULT'),
         ]:
             type_key = '%sType' % data_type
-            for property_ in self._data[data_key]:
+            for property_ in self.data[data_key]:
                 property_ = copy(property_)
                 property_type = property_.pop(type_key, type_default)
                 flat_key = '%s %s' % (data_type, property_type)
@@ -281,7 +286,7 @@ class XeroContact(XeroObject):
         for key in [
             'ContactID', 'EmailAddress', 'Name'
         ]:
-            flattened[key] = self._data.get(key)
+            flattened[key] = self.data.get(key)
 
         for flat_key, attribute in [
             ('AddressLine', 'main_address_lines'),
