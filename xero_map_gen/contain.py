@@ -1,4 +1,4 @@
-""" Container classes and utilities for containing data. """
+"""Container classes and utilities for containing data."""
 
 import csv
 import heapq
@@ -42,7 +42,8 @@ class XeroContactGroup(XeroObjectGroup):
 
     @classmethod
     def dump_contacts_raw_csv(cls, contacts, dump_path='contacts-raw.csv'):
-        cls.dump_items_csv(contacts.flatten_raw, dump_path, cls.names_raw_csv, 'flatten_raw')
+        cls.dump_items_csv(
+            contacts.flatten_raw, dump_path, cls.names_raw_csv, 'flatten_raw')
 
     @classmethod
     def dump_contacts_verbose_csv(cls, contacts, dump_path='contacts-verbose.csv'):
@@ -64,12 +65,12 @@ class XeroContactGroup(XeroObjectGroup):
 
     names_sanitized_csv = {
         'Name': 'Company Name',
-        'AddressLine' : 'Address',
-        'AddressArea' : 'Area',
-        'AddressPostcode' : 'Postcode',
-        'AddressState' : 'State',
-        'AddressCountry' : 'Country',
-        'Phone' : 'Phone',
+        'AddressLine': 'Address',
+        'AddressArea': 'Area',
+        'AddressPostcode': 'Postcode',
+        'AddressState': 'State',
+        'AddressCountry': 'Country',
+        'Phone': 'Phone',
         'EmailAddress': 'Email',
     }
 
@@ -86,10 +87,11 @@ class XeroContactGroup(XeroObjectGroup):
         )
 
 class XeroObject(object):
-    def _primary_property(self, properties, type_key, type_priority, fn_empty):
+    def _primary_property(
+            self, properties, type_key, type_priority, fn_empty, default=None):
         """ Abstract main_address and main_phone. """
-        if len(properties) == 0:
-            return
+        if not properties:
+            return default
         if len(properties) == 1:
             return properties[0]
         nonempty_properties = []
@@ -104,6 +106,7 @@ class XeroObject(object):
         if nonempty_properties:
             _, primary_property = heapq.heappop(nonempty_properties)
             return primary_property
+        return default
 
 
 class XeroContact(XeroObject):
@@ -117,8 +120,8 @@ class XeroContact(XeroObject):
     @data.setter
     def data(self, value):
         self._data = value
-        self._main_address = None
-        self._main_phone = None
+        self._main_address = {}
+        self._main_phone = {}
 
     address_type_priority = [
         'STREET', 'POBOX', 'DELIVERY'
@@ -137,7 +140,7 @@ class XeroContact(XeroObject):
 
         self._main_address = self._primary_property(
             self.data.get('Addresses', []), 'AddressType',
-            self.address_type_priority, address_empty
+            self.address_type_priority, address_empty, default={}
         )
         return self._main_address
 
@@ -155,7 +158,7 @@ class XeroContact(XeroObject):
 
         self._main_phone = self._primary_property(
             self.data.get('Phones', []), 'PhoneType',
-            self.phone_type_priority, phone_empty
+            self.phone_type_priority, phone_empty, default={}
         )
         return self._main_phone
 
@@ -169,8 +172,6 @@ class XeroContact(XeroObject):
     def main_address_lines(self):
         main_address = self.main_address
         lines = []
-        if not main_address:
-            return ''
         for line in range(1, 5):
             key = "AddressLine%d" % line
             if key not in main_address:
@@ -185,22 +186,16 @@ class XeroContact(XeroObject):
     @property
     def main_address_area(self):
         main_address = self.main_address
-        if not main_address:
-            return ''
         return main_address.get('City')
 
     @property
     def main_address_postcode(self):
         main_address = self.main_address
-        if not main_address:
-            return ''
         return main_address.get('PostalCode')
 
     @property
     def main_address_state(self):
         main_address = self.main_address
-        if not main_address:
-            return ''
         return main_address.get('Region')
 
     @classmethod
@@ -213,8 +208,6 @@ class XeroContact(XeroObject):
     @property
     def main_address_country(self):
         main_address = self.main_address
-        if not main_address:
-            return ''
         country_code = main_address.get('Country', '') or 'AU'
         return self.convert_country_code(country_code)
 

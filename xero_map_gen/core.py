@@ -55,3 +55,6 @@ def main(argv=None):
     setup_logging(**dict(conf.LogConfig))
     map_contacts = get_map_contacts(conf)
     dump_map_contacts(conf, map_contacts)
+
+if __name__ == '__main__':
+    main()
