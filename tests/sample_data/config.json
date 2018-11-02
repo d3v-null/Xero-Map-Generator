@@ -1,6 +1,6 @@
 {
     "XeroApiConfig" : {
         "consumer_key" : "XXXXXXXXXXXXXXXXX1XXXX1XXX1XXX",
-        "rsa_key_path" : "~/.credentials/privatekey.pem"
+        "rsa_key_path" : "tests/sample_data/dummy_rsa_key.pem"
     }
 }

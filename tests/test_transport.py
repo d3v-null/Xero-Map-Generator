@@ -88,3 +88,10 @@ class TransportTestCase(AbstractXMGTestCase):
                 ['ACME Agencies'], limit=1)
 
         self.assertEqual(len(contacts), 1)
+
+    def test_get_creds_file(self):
+        api_creds = self.example_api_creds.copy()
+        del api_creds['rsa_key_raw']
+        api_creds['rsa_key_path'] = 'tests/sample_data/dummy_rsa_key.pem'
+        xero = XeroApiWrapper(**api_creds)
+        self.assertTrue(xero)
