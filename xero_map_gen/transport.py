@@ -17,15 +17,18 @@ class XeroApiWrapper(Xero):
     sleep_time = 10
     max_attempts = 3
 
-    def __init__(self, rsa_key_path, consumer_key):
+    def __init__(self, consumer_key, **kwargs):
         PKG_LOGGER.debug(
-            "xero API args: rsa_key_path: %s; consumer_key: %s",
-            rsa_key_path, consumer_key
+            "xero API args: consumer_key: %s, kwargs: %s",
+            consumer_key, kwargs
         )
-        rsa_key_path = os.path.expanduser(rsa_key_path)
+        rsa_key = kwargs.get('rsa_key_raw')
+        if not rsa_key:
+            rsa_key_path = kwargs.get('rsa_key_path')
+            rsa_key_path = os.path.expanduser(rsa_key_path)
 
-        with open(rsa_key_path) as key_file:
-            rsa_key = key_file.read()
+            with open(rsa_key_path) as key_file:
+                rsa_key = key_file.read()
 
         credentials = PrivateCredentials(consumer_key, rsa_key)
         super().__init__(credentials)
@@ -38,12 +41,16 @@ class XeroApiWrapper(Xero):
                 endpoint_obj = getattr(self, endpoint)
                 return getattr(endpoint_obj, query)(*args, **kwargs)
             except XeroRateLimitExceeded:
-                PKG_LOGGER.info("API rate limit reached. Sleeping for %s seconds" % sleep_time)
+                PKG_LOGGER.info(
+                    "API rate limit reached. Sleeping for %s seconds" %
+                    sleep_time)
                 attempts += 1
                 time.sleep(sleep_time)
                 sleep_time += self.sleep_time
                 continue
-        raise UserWarning("Reached maximum number attempts (%s) for %s %s" % (self.max_attempts, query, endpoint))
+        raise UserWarning(
+            "Reached maximum number attempts (%s) for %s %s" % (
+                self.max_attempts, query, endpoint))
 
     def get_contacts_by_ids(self, contact_ids, limit=None, chunk_size=20):
         # TODO: local caching and check modified time
@@ -74,7 +81,8 @@ class XeroApiWrapper(Xero):
                     pbar.update(chunk_size)
         return contacts
 
-    def _get_contact_ids_in_group_ids(self, contact_group_ids=None, limit=None):
+    def _get_contact_ids_in_group_ids(
+            self, contact_group_ids=None, limit=None):
         contact_ids = set()
         for contact_group_id in contact_group_ids:
             group_data = self.rate_limit_retry_query(
@@ -90,7 +98,8 @@ class XeroApiWrapper(Xero):
         contact_group_ids = []
         names_upper = [name.upper() for name in names]
         all_groups = self.rate_limit_retry_query('contactgroups', 'all')
-        PKG_LOGGER.debug("all xero contact groups: %s", pprint.pformat(all_groups))
+        PKG_LOGGER.debug(
+            "all xero contact groups: %s", pprint.pformat(all_groups))
         for contact_group in all_groups:
             if contact_group.get('Name', '').upper() not in names_upper:
                 continue
@@ -98,7 +107,6 @@ class XeroApiWrapper(Xero):
             if contact_group_id:
                 contact_group_ids.append(contact_group_id)
         return contact_group_ids
-
 
     def get_contacts_in_group_names(self, names=None, limit=None):
         """
@@ -117,6 +125,8 @@ class XeroApiWrapper(Xero):
         limit = limit or None
         names = names or []
         contact_group_ids = self._get_contact_group_ids_from_names(names)
-        assert contact_group_ids, "unable to find contact group ID matching any of %s" % names
-        contact_ids = self._get_contact_ids_in_group_ids(contact_group_ids, limit)
+        assert contact_group_ids, \
+            "unable to find contact group ID matching any of %s" % names
+        contact_ids = self._get_contact_ids_in_group_ids(
+            contact_group_ids, limit)
         return self.get_contacts_by_ids(contact_ids, limit)

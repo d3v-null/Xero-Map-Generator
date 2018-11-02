@@ -89,7 +89,7 @@ class AbstractXMGTestCase(unittest.TestCase):
 
     example_api_creds = {
         'consumer_key': 'XXXXXXXXXXXXXXXXX1XXXX1XXX1XXX',
-        'rsa_key_path': '~/.credentials/privatekey.pem'
+        'rsa_key_raw': 'XXXXXXXXXX'
     }
 
     def setUp(self):
