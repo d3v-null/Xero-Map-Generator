@@ -23,7 +23,7 @@ Generates a Google Maps import file from a Contact Group in Xero
 ## Usage
 
 Create a config file with your API credentials
-```
+```bash
 cat > ~/.credentials/xmg_config.json << EOF
 {
     "XeroApiConfig":{
@@ -34,9 +34,16 @@ cat > ~/.credentials/xmg_config.json << EOF
 EOF
 ```
 
+Use [the instructions for the pyxero API](https://github.com/freakboy3742/pyxero) to generate your private application credentials
+
+To Generate a single xml file
+```bash
+xero_map_gen --config-dir ~/.credentials --config-path xmg_config.json --filter-contact-groups 'Support Clients (monthly)'
+```
+
 Create a script if you are generating multiple csv files like so
 
-```
+```bash
 xero_map_gen --filter-contact-groups 'ACME Agencies|Joli Agencies|KAS Agencies' --filter-states 'NSW|ACT' --dump-path "stockists_nsw_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
 xero_map_gen --filter-contact-groups 'Foo Agencies'  --filter-states 'QLD' --dump-path "stockists_qld_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
 xero_map_gen --filter-contact-groups 'Bar Agencies' --dump-path "stockists_vic_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \

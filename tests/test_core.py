@@ -87,6 +87,11 @@ class AbstractXMGTestCase(unittest.TestCase):
         'UpdatedDateUTC': datetime.datetime(2017, 2, 20, 18, 14, 30, 327000)
     }
 
+    example_api_creds = {
+        'consumer_key': 'XXXXXXXXXXXXXXXXX1XXXX1XXX1XXX',
+        'rsa_key_path': '~/.credentials/privatekey.pem'
+    }
+
     def setUp(self):
         config_paths = []
         if self.config_path:

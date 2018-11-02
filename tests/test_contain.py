@@ -134,9 +134,14 @@ class XeroContactTestCase(ContainTestCase):
 
     def test_dump_items_csv_unicode(self):
         tmp_dump_dir = tempfile.mkdtemp(self.id())
-        items = [
-            {'AddressPostcode': u'1234', 'Name': u'Lil\u2019 Unicode', 'AddressState': u'SA', 'AddressCountry': 'Australia', 'Phone': u'08 1234 5678', 'ContactID': u'f7b94e73-6846-4cc1-a91a-05aff537bf9e', 'EmailAddress': u'blah@bigpond.com', 'AddressArea': u'Unicodeland', 'AddressLine': u'51 Derp Street'}
-        ]
+        items = [{
+            'AddressPostcode': u'1234', 'Name': u'Lil\u2019 Unicode',
+            'AddressState': u'SA', 'AddressCountry': 'Australia',
+            'Phone': u'08 1234 5678',
+            'ContactID': u'f7b94e73-6846-4cc1-a91a-05aff537bf9e',
+            'EmailAddress': u'blah@bigpond.com', 'AddressArea': u'Unicodeland',
+            'AddressLine': u'51 Derp Street'
+        }]
         dump_path = os.path.join(tmp_dump_dir, 'items.csv')
         XeroContactGroup.dump_items_csv(
             items,

@@ -63,7 +63,8 @@ class XeroApiWrapper(Xero):
                 filter_query = 'ContactStatus=="ACTIVE"&&(%s)' % "||".join([
                     'ID==Guid("%s")' % contact_id for contact_id in query_contact_ids
                 ])
-                contacts_raw = self.rate_limit_retry_query('contacts', 'filter', raw=filter_query)
+                contacts_raw = self.rate_limit_retry_query(
+                    'contacts', 'filter', raw=filter_query)
                 contacts.extend([
                     XeroContact(contact_raw) for contact_raw in contacts_raw
                 ])
@@ -76,7 +77,8 @@ class XeroApiWrapper(Xero):
     def _get_contact_ids_in_group_ids(self, contact_group_ids=None, limit=None):
         contact_ids = set()
         for contact_group_id in contact_group_ids:
-            group_data = self.contactgroups.get(contact_group_id)[0]
+            group_data = self.rate_limit_retry_query(
+                'contactgroups', 'get', contact_group_id)[0]
             PKG_LOGGER.debug("group data: %s", pprint.pformat(group_data))
             for contact in group_data.get('Contacts', []):
                 contact_id = contact.get('ContactID')
@@ -87,7 +89,7 @@ class XeroApiWrapper(Xero):
     def _get_contact_group_ids_from_names(self, names):
         contact_group_ids = []
         names_upper = [name.upper() for name in names]
-        all_groups = self.contactgroups.all()
+        all_groups = self.rate_limit_retry_query('contactgroups', 'all')
         PKG_LOGGER.debug("all xero contact groups: %s", pprint.pformat(all_groups))
         for contact_group in all_groups:
             if contact_group.get('Name', '').upper() not in names_upper:
