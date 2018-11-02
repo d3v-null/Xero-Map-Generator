@@ -164,11 +164,13 @@ class XeroContact(XeroObject):
     def main_address_lines(self):
         main_address = self.main_address
         lines = []
+        if not main_address:
+            return ''
         for line in range(1, 5):
             key = "AddressLine%d" % line
-            if key not in self.main_address:
+            if key not in main_address:
                 continue
-            line = self.main_address[key]
+            line = main_address[key]
             if line:
                 lines.append(line)
         return ", ".join(lines)
@@ -177,15 +179,24 @@ class XeroContact(XeroObject):
 
     @property
     def main_address_area(self):
-        return self.main_address.get('City')
+        main_address = self.main_address
+        if not main_address:
+            return ''
+        return main_address.get('City')
 
     @property
     def main_address_postcode(self):
-        return self.main_address.get('PostalCode')
+        main_address = self.main_address
+        if not main_address:
+            return ''
+        return main_address.get('PostalCode')
 
     @property
     def main_address_state(self):
-        return self.main_address.get('Region')
+        main_address = self.main_address
+        if not main_address:
+            return ''
+        return main_address.get('Region')
 
     @classmethod
     def convert_country_code(cls, country_code):
@@ -196,7 +207,10 @@ class XeroContact(XeroObject):
 
     @property
     def main_address_country(self):
-        country_code = self.main_address.get('Country', '') or 'AU'
+        main_address = self.main_address
+        if not main_address:
+            return ''
+        country_code = main_address.get('Country', '') or 'AU'
         return self.convert_country_code(country_code)
 
     @property
