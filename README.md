@@ -44,12 +44,16 @@ xero_map_gen --config-dir ~/.credentials --config-path xmg_config.json --filter-
 Create a script if you are generating multiple csv files like so
 
 ```bash
-xero_map_gen --filter-contact-groups 'ACME Agencies|Joli Agencies|KAS Agencies' --filter-states 'NSW|ACT' --dump-path "stockists_nsw_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
-xero_map_gen --filter-contact-groups 'Foo Agencies'  --filter-states 'QLD' --dump-path "stockists_qld_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
-xero_map_gen --filter-contact-groups 'Bar Agencies' --dump-path "stockists_vic_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
-xero_map_gen --filter-contact-groups 'Foobar Agencies' --dump-path "stockists_sa_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
-xero_map_gen --filter-contact-groups 'Direct' --filter-states 'TAS' --dump-path "stockists_tas_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
-xero_map_gen --filter-contact-groups 'Direct' --filter-states 'WA' --dump-path "stockists_wa_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json && \
-xero_map_gen --filter-contact-groups 'Direct' --filter-states 'NT' --dump-path "stockists_nt_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json
-read -p "Maps Succesfully Generated, press enter to continue"
+#!/bin/bash
+cd /mnt/c/Users/User/Desktop/Maps/
+
+rm warnings.txt
+xero_map_gen --filter-contact-groups 'Direct' --filter-states 'NT' --dump-path "stockists_nt_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json "${@:2}" 
+xero_map_gen --filter-contact-groups 'Direct|Victoria' --filter-states 'VIC' --dump-path "stockists_vic_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json "${@:2}" && \
+xero_map_gen --filter-contact-groups 'Direct|Country NSW|Sydney Metro' --filter-states 'NSW|ACT' --dump-path "stockists_nsw_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json "${@:2}" && \
+xero_map_gen --filter-contact-groups 'Direct|QLD'  --filter-states 'QLD' --dump-path "stockists_qld_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json "${@:2}" && \
+xero_map_gen --filter-contact-groups 'Direct|South Australia' --filter-states 'SA' --dump-path "stockists_sa_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json "${@:2}" && \
+xero_map_gen --filter-contact-groups 'Direct' --filter-states 'WA' --dump-path "stockists_wa_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json "${@:2}" && \
+xero_map_gen --filter-contact-groups 'Direct' --filter-states 'TAS' --dump-path "stockists_tas_$(date +'%Y-%m-%d').csv" --config-path ~/.credentials/xmg_config.json "${@:2}" && \
+read -n 1 -p "Maps Succesfully Generated, press enter to continue"
 ```
