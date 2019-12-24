@@ -8,6 +8,9 @@ from xero_map_gen.log import setup_logging, PKG_LOGGER
 from xero_map_gen.contain import XeroContactGroup
 from xero_map_gen.helper import expand_relative_path
 
+def sanitize_filter_term(term):
+    return term.upper().lstrip(' ').rstrip(' ')
+
 def get_map_contacts(conf):
     xero = XeroApiWrapper(**dict(conf.XeroApiConfig))
     map_contact_groups = conf.FilterConfig.get('contact_groups', '').split('|')
@@ -19,9 +22,11 @@ def get_map_contacts(conf):
         ('states', 'main_address_state'),
         ('countries', 'main_address_country'),
     ]:
+        bad_contacts = set()
+
         if filter_attr not in conf.FilterConfig:
             continue
-        filter_values = [value.upper() for value in getattr(conf.FilterConfig, filter_attr).split('|')]
+        filter_values = [sanitize_filter_term(value) for value in getattr(conf.FilterConfig, filter_attr).split('|')]
         filtered_contacts = []
         for contact in map_contacts:
             contact_value = getattr(contact,contact_attr)
@@ -30,11 +35,18 @@ def get_map_contacts(conf):
                     filter_attr,
                     pprint.pformat(contact.flatten_verbose())
                 ))
-            if contact_value.upper() in filter_values:
+                bad_contacts.add(contact)
+            if sanitize_filter_term(contact_value) in filter_values:
                 filtered_contacts.append(contact)
         if not filtered_contacts:
             PKG_LOGGER.error("No contacts matching %s filter" % filter_attr)
         map_contacts = filtered_contacts
+
+        bad_contact_urls = [
+            "https://go.xero.com/Contacts/View/" + contact.contact_id
+            for contact in bad_contacts
+        ]
+        PKG_LOGGER.warn("The following contacts are missing " + contact_attr + ", please fix! " + repr(bad_contact_urls))
 
     # TODO: validate addresses
     PKG_LOGGER.info("map contacts: \n%s", XeroContactGroup.dump_contacts_sanitized_table(map_contacts))
