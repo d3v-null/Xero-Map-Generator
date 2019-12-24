@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 """Container classes and utilities for containing data."""
 
 import csv
@@ -7,11 +8,21 @@ from copy import copy
 import tabulate
 
 from .helper import SanitationUtils
-
+from .log import PKG_LOGGER
 
 class XeroObjectGroup(object):
     @classmethod
     def dump_items_csv(cls, items, dump_path='items.csv', names=None, flatten_attr=None):
+        try:
+            with open(dump_path, 'w'):
+                pass
+        except IOError as exc:
+            PKG_LOGGER.error("file " + dump_path + " could not be opened. Try closing the file. " + repr(exc))
+            try:
+                input("Press enter to continue")
+            except SyntaxError:
+                pass
+
         with open(dump_path, 'w') as dump_path:
             writer = csv.DictWriter(dump_path, names, extrasaction='ignore')
             writer.writeheader()
