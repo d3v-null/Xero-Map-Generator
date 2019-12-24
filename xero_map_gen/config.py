@@ -291,5 +291,5 @@ def load_config(argv=None, proto_config=None):
     except ConfigException as exc:
         config_runtime_exception(exc, config)
     if not config_quiet(config):
-        ROOT_LOGGER.warning("config is \n%s", pprint.pformat(config))
+        ROOT_LOGGER.info("config is \n%s", pprint.pformat(config))
     return config
