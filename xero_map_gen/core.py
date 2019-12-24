@@ -33,7 +33,7 @@ def get_map_contacts(conf):
             if not contact_value:
                 PKG_LOGGER.warn("Contact has no value for %s filter: %s" % (
                     filter_attr,
-                    pprint.pformat(contact.flatten_verbose())
+                    pprint.pformat(contact.contact_id)
                 ))
                 bad_contacts.add(contact)
             if sanitize_filter_term(contact_value) in filter_values:
@@ -42,11 +42,17 @@ def get_map_contacts(conf):
             PKG_LOGGER.error("No contacts matching %s filter" % filter_attr)
         map_contacts = filtered_contacts
 
-        bad_contact_urls = [
-            "https://go.xero.com/Contacts/View/" + contact.contact_id
-            for contact in bad_contacts
-        ]
-        PKG_LOGGER.warn("The following contacts are missing " + contact_attr + ", please fix! " + repr(bad_contact_urls))
+        if bad_contacts:
+            bad_contact_urls = [
+                "https://go.xero.com/Contacts/View/" + contact.contact_id
+                for contact in bad_contacts
+            ]
+            warning = "The following contacts are missing " + contact_attr + ", please fix! "
+            PKG_LOGGER.warn(warning + repr(bad_contact_urls))
+            with open('warnings.txt', 'w+') as warnings:
+                warnings.write(warning + '\r\n') 
+                for url in bad_contact_urls:
+                    warnings.write( " -> " + url + '\r\n' )
 
     # TODO: validate addresses
     PKG_LOGGER.info("map contacts: \n%s", XeroContactGroup.dump_contacts_sanitized_table(map_contacts))
